@@ -4,19 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, updateProfile, logout } = useAuth();
+  const { user, loading, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
   const [saved, setSaved] = useState(false);
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (!user) { navigate('/auth'); return null; }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (name.trim()) {
-      updateProfile(name.trim());
+      await updateProfile(name.trim());
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     }
@@ -45,13 +43,6 @@ const ProfilePage = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">Telefon</label>
-            <p className="text-foreground font-mono bg-muted px-3 py-2 rounded-md border border-border">
-              {user.phone}
-            </p>
-          </div>
-
           <button
             onClick={handleSave}
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2.5 rounded-md font-semibold hover:opacity-90 transition-opacity neon-box"
@@ -61,7 +52,7 @@ const ProfilePage = () => {
           </button>
 
           <button
-            onClick={() => { logout(); navigate('/auth'); }}
+            onClick={async () => { await logout(); navigate('/auth'); }}
             className="w-full py-2.5 rounded-md font-semibold text-destructive border border-destructive/30 hover:bg-destructive/10 transition-all"
           >
             Çıkış Yap
