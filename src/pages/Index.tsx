@@ -15,13 +15,11 @@ const games = [
 ];
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (!user) { navigate('/auth'); return null; }
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
@@ -43,9 +41,7 @@ const Index = () => {
             <Gamepad2 className="w-8 h-8 text-primary" />
             <h2 className="font-display text-sm sm:text-base text-foreground">OYUNLAR</h2>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Her hafta sıfırlanan skor tablosu ile yarış!
-          </p>
+          <p className="text-muted-foreground text-sm">Her hafta sıfırlanan skor tablosu ile yarış!</p>
         </div>
 
         <div className="grid gap-4 max-w-lg mx-auto">
@@ -59,9 +55,7 @@ const Index = () => {
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">{game.icon}</span>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                      {game.name}
-                    </h3>
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{game.name}</h3>
                     <p className="text-sm text-muted-foreground mt-1">{game.description}</p>
                     <div className="flex items-center gap-1 mt-2 text-xs text-accent">
                       <Trophy className="w-3 h-3" />
@@ -79,9 +73,7 @@ const Index = () => {
         </div>
 
         <div className="text-center mt-12">
-          <p className="text-muted-foreground text-xs font-display">
-            DAHA FAZLA OYUN YAKINDA...
-          </p>
+          <p className="text-muted-foreground text-xs font-display">DAHA FAZLA OYUN YAKINDA...</p>
         </div>
       </main>
     </div>

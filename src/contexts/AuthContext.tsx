@@ -1,85 +1,97 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (phone: string, password: string) => boolean;
-  register: (name: string, phone: string, password: string) => boolean;
-  logout: () => void;
-  updateProfile: (name: string) => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<string | null>;
+  register: (name: string, email: string, password: string) => Promise<string | null>;
+  loginWithGoogle: () => Promise<string | null>;
+  logout: () => Promise<void>;
+  updateProfile: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-interface StoredUser {
-  id: string;
-  name: string;
-  phone: string;
-  password: string;
+async function fetchProfile(userId: string): Promise<User | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  if (!data) return null;
+  return { id: data.user_id, name: data.display_name, phone: data.phone };
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('currentUser');
-    if (stored) setUser(JSON.parse(stored));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        setUser(profile || { id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        setUser(profile || { id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const getUsers = (): StoredUser[] => {
-    return JSON.parse(localStorage.getItem('users') || '[]');
+  const register = async (name: string, email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    });
+    return error?.message || null;
   };
 
-  const saveUsers = (users: StoredUser[]) => {
-    localStorage.setItem('users', JSON.stringify(users));
+  const login = async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error?.message || null;
   };
 
-  const register = (name: string, phone: string, password: string): boolean => {
-    const users = getUsers();
-    if (users.find(u => u.phone === phone)) return false;
-    const newUser: StoredUser = { id: crypto.randomUUID(), name, phone, password };
-    saveUsers([...users, newUser]);
-    const { password: _, ...publicUser } = newUser;
-    setUser(publicUser);
-    localStorage.setItem('currentUser', JSON.stringify(publicUser));
-    return true;
+  const loginWithGoogle = async (): Promise<string | null> => {
+    const { lovable } = await import('@/integrations/lovable/index');
+    const result = await lovable.auth.signInWithOAuth('google', {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) return result.error.message;
+    return null;
   };
 
-  const login = (phone: string, password: string): boolean => {
-    const users = getUsers();
-    const found = users.find(u => u.phone === phone && u.password === password);
-    if (!found) return false;
-    const { password: _, ...publicUser } = found;
-    setUser(publicUser);
-    localStorage.setItem('currentUser', JSON.stringify(publicUser));
-    return true;
-  };
-
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('currentUser');
   };
 
-  const updateProfile = (name: string) => {
+  const updateProfile = async (name: string) => {
     if (!user) return;
-    const users = getUsers();
-    const idx = users.findIndex(u => u.id === user.id);
-    if (idx !== -1) {
-      users[idx].name = name;
-      saveUsers(users);
-    }
-    const updated = { ...user, name };
-    setUser(updated);
-    localStorage.setItem('currentUser', JSON.stringify(updated));
+    await supabase.from('profiles').update({ display_name: name }).eq('user_id', user.id);
+    setUser({ ...user, name });
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

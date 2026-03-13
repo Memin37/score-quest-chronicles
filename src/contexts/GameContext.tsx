@@ -1,20 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LeaderboardEntry {
   userId: string;
   userName: string;
   game: string;
   difficulty: string;
-  score: number; // time in seconds for sudoku
-  date: string;
+  score: number;
+  weekStart: string;
 }
 
 interface GameContextType {
   entries: LeaderboardEntry[];
-  addEntry: (entry: Omit<LeaderboardEntry, 'date'>) => void;
+  addEntry: (entry: Omit<LeaderboardEntry, 'weekStart'>) => Promise<void>;
   getLeaderboard: (game: string, difficulty: string) => LeaderboardEntry[];
   getWeekStart: () => string;
-  getBestScore: (userId: string, game: string, difficulty: string) => LeaderboardEntry | null;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -23,69 +23,79 @@ const getWeekStart = (): string => {
   const now = new Date();
   const day = now.getDay();
   const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(now.setDate(diff));
-  monday.setHours(0, 0, 0, 0);
+  const monday = new Date(now.getFullYear(), now.getMonth(), diff);
   return monday.toISOString().split('T')[0];
 };
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
-  useEffect(() => {
+  const fetchEntries = async () => {
     const weekStart = getWeekStart();
-    const stored = JSON.parse(localStorage.getItem('leaderboard') || '[]') as LeaderboardEntry[];
-    // Filter to current week only
-    const currentWeek = stored.filter(e => e.date >= weekStart);
-    if (currentWeek.length !== stored.length) {
-      localStorage.setItem('leaderboard', JSON.stringify(currentWeek));
+    const { data } = await supabase
+      .from('leaderboard_entries')
+      .select('*')
+      .eq('week_start', weekStart)
+      .order('score', { ascending: true });
+
+    if (data) {
+      setEntries(data.map(d => ({
+        userId: d.user_id,
+        userName: d.user_name,
+        game: d.game,
+        difficulty: d.difficulty,
+        score: d.score,
+        weekStart: d.week_start,
+      })));
     }
-    setEntries(currentWeek);
+  };
+
+  useEffect(() => {
+    fetchEntries();
   }, []);
 
-  const addEntry = (entry: Omit<LeaderboardEntry, 'date'>) => {
-    const newEntry: LeaderboardEntry = { ...entry, date: new Date().toISOString() };
+  const addEntry = async (entry: Omit<LeaderboardEntry, 'weekStart'>) => {
     const weekStart = getWeekStart();
-    
-    setEntries(prev => {
-      // Keep only best score per user per game per difficulty this week
-      const existing = prev.find(
-        e => e.userId === entry.userId && e.game === entry.game && e.difficulty === entry.difficulty && e.date >= weekStart
-      );
-      
-      let updated: LeaderboardEntry[];
-      if (existing) {
-        if (entry.score < existing.score) {
-          updated = prev.map(e => 
-            e === existing ? newEntry : e
-          );
-        } else {
-          return prev;
-        }
-      } else {
-        updated = [...prev, newEntry];
+
+    // Upsert: insert or update if better score
+    const { data: existing } = await supabase
+      .from('leaderboard_entries')
+      .select('*')
+      .eq('user_id', entry.userId)
+      .eq('game', entry.game)
+      .eq('difficulty', entry.difficulty)
+      .eq('week_start', weekStart)
+      .single();
+
+    if (existing) {
+      if (entry.score < existing.score) {
+        await supabase
+          .from('leaderboard_entries')
+          .update({ score: entry.score, user_name: entry.userName })
+          .eq('id', existing.id);
       }
-      
-      localStorage.setItem('leaderboard', JSON.stringify(updated));
-      return updated;
-    });
+    } else {
+      await supabase.from('leaderboard_entries').insert({
+        user_id: entry.userId,
+        user_name: entry.userName,
+        game: entry.game,
+        difficulty: entry.difficulty,
+        score: entry.score,
+        week_start: weekStart,
+      });
+    }
+
+    await fetchEntries();
   };
 
   const getLeaderboard = (game: string, difficulty: string): LeaderboardEntry[] => {
-    const weekStart = getWeekStart();
     return entries
-      .filter(e => e.game === game && e.difficulty === difficulty && e.date >= weekStart)
+      .filter(e => e.game === game && e.difficulty === difficulty)
       .sort((a, b) => a.score - b.score);
   };
 
-  const getBestScore = (userId: string, game: string, difficulty: string): LeaderboardEntry | null => {
-    const weekStart = getWeekStart();
-    return entries.find(
-      e => e.userId === userId && e.game === game && e.difficulty === difficulty && e.date >= weekStart
-    ) || null;
-  };
-
   return (
-    <GameContext.Provider value={{ entries, addEntry, getLeaderboard, getWeekStart, getBestScore }}>
+    <GameContext.Provider value={{ entries, addEntry, getLeaderboard, getWeekStart }}>
       {children}
     </GameContext.Provider>
   );

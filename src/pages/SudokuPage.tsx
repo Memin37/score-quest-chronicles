@@ -17,7 +17,7 @@ const difficultyLabels: Record<Difficulty, string> = {
 };
 
 const SudokuPage = () => {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { addEntry } = useGame();
   const navigate = useNavigate();
 
@@ -54,6 +54,10 @@ const SudokuPage = () => {
     return () => clearInterval(interval);
   }, [isRunning]);
 
+  useEffect(() => {
+    if (!loading && !user) navigate('/auth');
+  }, [loading, user]);
+
   const handleCellClick = (row: number, col: number) => {
     if (isComplete) return;
     if (puzzle[row]?.[col] !== null) return;
@@ -69,7 +73,6 @@ const SudokuPage = () => {
     newBoard[r][c] = num;
     setBoard(newBoard);
 
-    // Check error
     const newErrors = new Set(errors);
     if (num !== solution[r][c]) {
       newErrors.add(`${r}-${c}`);
@@ -78,7 +81,6 @@ const SudokuPage = () => {
     }
     setErrors(newErrors);
 
-    // Check completion
     if (newErrors.size === 0 && checkComplete(newBoard)) {
       setIsRunning(false);
       setIsComplete(true);
@@ -121,14 +123,11 @@ const SudokuPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
-      {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="font-display text-lg text-primary neon-text cursor-pointer" onClick={() => navigate('/')}>
@@ -149,7 +148,7 @@ const SudokuPage = () => {
               <span className="hidden sm:inline">{user.name}</span>
             </button>
             <button
-              onClick={() => { logout(); navigate('/auth'); }}
+              onClick={async () => { await logout(); navigate('/auth'); }}
               className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
               title="Çıkış"
             >
@@ -161,9 +160,7 @@ const SudokuPage = () => {
 
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main game area */}
           <div className="flex-1">
-            {/* Difficulty selector */}
             <div className="flex items-center gap-3 mb-6">
               {(Object.keys(difficultyLabels) as Difficulty[]).map(d => (
                 <button
@@ -180,7 +177,6 @@ const SudokuPage = () => {
               ))}
             </div>
 
-            {/* Timer + controls */}
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
                 <Timer className="w-4 h-4 text-primary" />
@@ -197,50 +193,33 @@ const SudokuPage = () => {
               </button>
             </div>
 
-            {/* Completion message */}
             {isComplete && (
               <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg neon-box">
-                <p className="font-display text-xs text-primary neon-text">
-                  TEBRİKLER! 🎉
-                </p>
+                <p className="font-display text-xs text-primary neon-text">TEBRİKLER! 🎉</p>
                 <p className="text-foreground text-sm mt-1">
                   Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
                 </p>
               </div>
             )}
 
-            {/* Board */}
             {puzzle.length > 0 && (
               <div className="flex flex-col items-center sm:items-start gap-6">
-                <SudokuBoard
-                  board={board}
-                  puzzle={puzzle}
-                  selectedCell={selectedCell}
-                  onCellClick={handleCellClick}
-                  errors={errors}
-                />
+                <SudokuBoard board={board} puzzle={puzzle} selectedCell={selectedCell} onCellClick={handleCellClick} errors={errors} />
                 <NumberPad onNumber={handleNumber} onClear={handleClear} />
               </div>
             )}
           </div>
 
-          {/* Leaderboard sidebar - desktop */}
           <div className="hidden lg:block w-80">
             <LeaderboardPanel game="sudoku" difficulty={difficulty} />
           </div>
 
-          {/* Leaderboard mobile overlay */}
           {showLeaderboard && (
             <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
               <div className="max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="font-display text-sm text-accent">SKOR TABLOSU</h2>
-                  <button
-                    onClick={() => setShowLeaderboard(false)}
-                    className="text-muted-foreground hover:text-foreground text-2xl"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
                 </div>
                 <LeaderboardPanel game="sudoku" difficulty={difficulty} />
               </div>
