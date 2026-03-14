@@ -5,7 +5,7 @@ import { generateSudoku, checkComplete, formatTime } from '@/lib/sudoku';
 import SudokuBoard from '@/components/SudokuBoard';
 import NumberPad from '@/components/NumberPad';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
-import { Timer, RotateCcw, Trophy, User, LogOut } from 'lucide-react';
+import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -31,6 +31,9 @@ const SudokuPage = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [notesMode, setNotesMode] = useState(false);
+  const [notes, setNotes] = useState<Map<string, Set<number>>>(new Map());
 
   const startNewGame = useCallback((diff: Difficulty) => {
     const { puzzle: p, solution: s } = generateSudoku(diff);
@@ -39,9 +42,12 @@ const SudokuPage = () => {
     setSolution(s);
     setSelectedCell(null);
     setTimer(0);
-    setIsRunning(true);
+    setIsRunning(false);
     setIsComplete(false);
     setErrors(new Set());
+    setGameStarted(false);
+    setNotesMode(false);
+    setNotes(new Map());
   }, []);
 
   useEffect(() => {
@@ -58,16 +64,42 @@ const SudokuPage = () => {
     if (!loading && !user) navigate('/auth');
   }, [loading, user]);
 
+  const handleStartGame = () => {
+    setGameStarted(true);
+    setIsRunning(true);
+  };
+
+  // Determine highlighted number from selected cell
+  const highlightedNumber = selectedCell ? board[selectedCell[0]][selectedCell[1]] : null;
+
   const handleCellClick = (row: number, col: number) => {
-    if (isComplete) return;
-    if (puzzle[row]?.[col] !== null) return;
+    if (!gameStarted || isComplete) return;
     setSelectedCell([row, col]);
   };
 
   const handleNumber = (num: number) => {
-    if (!selectedCell || isComplete) return;
+    if (!selectedCell || isComplete || !gameStarted) return;
     const [r, c] = selectedCell;
     if (puzzle[r][c] !== null) return;
+
+    if (notesMode) {
+      const key = `${r}-${c}`;
+      const newNotes = new Map(notes);
+      const cellNotes = new Set(newNotes.get(key) || []);
+      if (cellNotes.has(num)) {
+        cellNotes.delete(num);
+      } else {
+        cellNotes.add(num);
+      }
+      newNotes.set(key, cellNotes);
+      setNotes(newNotes);
+      return;
+    }
+
+    // Clear notes for this cell when placing a number
+    const newNotes = new Map(notes);
+    newNotes.delete(`${r}-${c}`);
+    setNotes(newNotes);
 
     const newBoard = board.map(row => [...row]);
     newBoard[r][c] = num;
@@ -97,9 +129,15 @@ const SudokuPage = () => {
   };
 
   const handleClear = () => {
-    if (!selectedCell || isComplete) return;
+    if (!selectedCell || isComplete || !gameStarted) return;
     const [r, c] = selectedCell;
     if (puzzle[r][c] !== null) return;
+
+    // Clear notes too
+    const newNotes = new Map(notes);
+    newNotes.delete(`${r}-${c}`);
+    setNotes(newNotes);
+
     const newBoard = board.map(row => [...row]);
     newBoard[r][c] = null;
     setBoard(newBoard);
@@ -109,14 +147,16 @@ const SudokuPage = () => {
   };
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!selectedCell || isComplete) return;
+    if (!selectedCell || isComplete || !gameStarted) return;
     const num = parseInt(e.key);
     if (num >= 1 && num <= 9) {
       handleNumber(num);
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
       handleClear();
+    } else if (e.key === 'n' || e.key === 'N') {
+      setNotesMode(m => !m);
     }
-  }, [selectedCell, isComplete, board, puzzle, solution, errors, timer, user]);
+  }, [selectedCell, isComplete, gameStarted, board, puzzle, solution, errors, timer, user, notesMode, notes]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -204,8 +244,38 @@ const SudokuPage = () => {
 
             {puzzle.length > 0 && (
               <div className="flex flex-col items-center sm:items-start gap-6">
-                <SudokuBoard board={board} puzzle={puzzle} selectedCell={selectedCell} onCellClick={handleCellClick} errors={errors} />
-                <NumberPad onNumber={handleNumber} onClear={handleClear} />
+                <div className="relative">
+                  <div className={!gameStarted ? 'blur-md pointer-events-none select-none' : ''}>
+                    <SudokuBoard
+                      board={board}
+                      puzzle={puzzle}
+                      selectedCell={selectedCell}
+                      onCellClick={handleCellClick}
+                      errors={errors}
+                      notes={notes}
+                      highlightedNumber={highlightedNumber}
+                    />
+                  </div>
+                  {!gameStarted && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <button
+                        onClick={handleStartGame}
+                        className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
+                      >
+                        <Play className="w-5 h-5" />
+                        BAŞLA
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {gameStarted && (
+                  <NumberPad
+                    onNumber={handleNumber}
+                    onClear={handleClear}
+                    notesMode={notesMode}
+                    onToggleNotes={() => setNotesMode(m => !m)}
+                  />
+                )}
               </div>
             )}
           </div>
