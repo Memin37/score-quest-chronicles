@@ -40,16 +40,17 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({ board, puzzle, selectedCell, 
                   w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center relative
                   font-mono text-lg sm:text-xl font-bold transition-all
                   ${borderRight} ${borderBottom}
-                  ${isSelected 
-                    ? 'bg-primary/20 ring-2 ring-primary ring-inset' 
-                    : isSameNumber
-                      ? 'bg-secondary/20 ring-1 ring-secondary ring-inset'
-                      : isHighlighted 
-                        ? 'bg-muted/60' 
-                        : 'bg-card'
+                  ${hasError
+                    ? 'bg-destructive/20 ring-1 ring-destructive ring-inset text-destructive'
+                    : isSelected 
+                      ? 'bg-primary/20 ring-2 ring-primary ring-inset' 
+                      : isSameNumber
+                        ? 'bg-secondary/20 ring-1 ring-secondary ring-inset'
+                        : isHighlighted 
+                          ? 'bg-muted/60' 
+                          : 'bg-card'
                   }
-                  ${isOriginal ? 'text-foreground' : 'text-primary'}
-                  ${hasError ? 'text-destructive bg-destructive/10' : ''}
+                  ${!hasError && (isOriginal ? 'text-foreground' : 'text-primary')}
                   cursor-pointer hover:bg-muted/40
                 `}
               >
