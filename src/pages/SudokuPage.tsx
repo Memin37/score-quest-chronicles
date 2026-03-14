@@ -77,6 +77,42 @@ const SudokuPage = () => {
     setSelectedCell([row, col]);
   };
 
+  const findConflicts = useCallback((currentBoard: (number | null)[][]) => {
+    const conflicts = new Set<string>();
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const val = currentBoard[r][c];
+        if (val === null) continue;
+        // Check row
+        for (let cc = 0; cc < 9; cc++) {
+          if (cc !== c && currentBoard[r][cc] === val) {
+            conflicts.add(`${r}-${c}`);
+            conflicts.add(`${r}-${cc}`);
+          }
+        }
+        // Check col
+        for (let rr = 0; rr < 9; rr++) {
+          if (rr !== r && currentBoard[rr][c] === val) {
+            conflicts.add(`${r}-${c}`);
+            conflicts.add(`${rr}-${c}`);
+          }
+        }
+        // Check box
+        const br = Math.floor(r / 3) * 3;
+        const bc = Math.floor(c / 3) * 3;
+        for (let rr = br; rr < br + 3; rr++) {
+          for (let cc = bc; cc < bc + 3; cc++) {
+            if ((rr !== r || cc !== c) && currentBoard[rr][cc] === val) {
+              conflicts.add(`${r}-${c}`);
+              conflicts.add(`${rr}-${cc}`);
+            }
+          }
+        }
+      }
+    }
+    return conflicts;
+  }, []);
+
   const handleNumber = (num: number) => {
     if (!selectedCell || isComplete || !gameStarted) return;
     const [r, c] = selectedCell;
@@ -105,12 +141,7 @@ const SudokuPage = () => {
     newBoard[r][c] = num;
     setBoard(newBoard);
 
-    const newErrors = new Set(errors);
-    if (num !== solution[r][c]) {
-      newErrors.add(`${r}-${c}`);
-    } else {
-      newErrors.delete(`${r}-${c}`);
-    }
+    const newErrors = findConflicts(newBoard);
     setErrors(newErrors);
 
     if (newErrors.size === 0 && checkComplete(newBoard)) {
