@@ -72,6 +72,25 @@ const SudokuPage = () => {
   // Determine highlighted number from selected cell
   const highlightedNumber = selectedCell ? board[selectedCell[0]][selectedCell[1]] : null;
 
+  // Find numbers that are fully and correctly placed (all 9 instances with no conflicts)
+  const completedNumbers = React.useMemo(() => {
+    const completed = new Set<number>();
+    for (let num = 1; num <= 9; num++) {
+      let count = 0;
+      let hasConflict = false;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (board[r]?.[c] === num) {
+            count++;
+            if (errors.has(`${r}-${c}`)) hasConflict = true;
+          }
+        }
+      }
+      if (count === 9 && !hasConflict) completed.add(num);
+    }
+    return completed;
+  }, [board, errors]);
+
   const handleCellClick = (row: number, col: number) => {
     if (!gameStarted || isComplete) return;
     setSelectedCell([row, col]);
