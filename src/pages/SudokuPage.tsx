@@ -164,7 +164,6 @@ const SudokuPage = () => {
     const [r, c] = selectedCell;
     if (puzzle[r][c] !== null) return;
 
-    // Clear notes too
     const newNotes = new Map(notes);
     newNotes.delete(`${r}-${c}`);
     setNotes(newNotes);
@@ -172,9 +171,7 @@ const SudokuPage = () => {
     const newBoard = board.map(row => [...row]);
     newBoard[r][c] = null;
     setBoard(newBoard);
-    const newErrors = new Set(errors);
-    newErrors.delete(`${r}-${c}`);
-    setErrors(newErrors);
+    setErrors(findConflicts(newBoard));
   };
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
