@@ -321,6 +321,7 @@ const SudokuPage = () => {
                     onClear={handleClear}
                     notesMode={notesMode}
                     onToggleNotes={() => setNotesMode(m => !m)}
+                    completedNumbers={completedNumbers}
                   />
                 )}
               </div>
