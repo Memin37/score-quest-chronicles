@@ -9,13 +9,22 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, loginWithGoogle, user } = useAuth();
+  const { login, register, loginWithGoogle, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  if (user) {
-    navigate('/');
-    return null;
+  useEffect(() => {
+    if (!authLoading && user) navigate('/');
+  }, [authLoading, user, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background grid-pattern flex items-center justify-center">
+        <p className="text-muted-foreground">Yükleniyor...</p>
+      </div>
+    );
   }
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
