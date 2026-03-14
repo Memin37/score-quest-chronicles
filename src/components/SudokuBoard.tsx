@@ -6,9 +6,11 @@ interface SudokuBoardProps {
   selectedCell: [number, number] | null;
   onCellClick: (row: number, col: number) => void;
   errors: Set<string>;
+  notes: Map<string, Set<number>>;
+  highlightedNumber: number | null;
 }
 
-const SudokuBoard: React.FC<SudokuBoardProps> = ({ board, puzzle, selectedCell, onCellClick, errors }) => {
+const SudokuBoard: React.FC<SudokuBoardProps> = ({ board, puzzle, selectedCell, onCellClick, errors, notes, highlightedNumber }) => {
   return (
     <div className="inline-block border-2 border-primary neon-box rounded-md overflow-hidden">
       {board.map((row, r) => (
@@ -24,6 +26,8 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({ board, puzzle, selectedCell, 
               Math.floor(selectedCell[1] / 3) === Math.floor(c / 3);
             const isHighlighted = !isSelected && (isSameRow || isSameCol || isSameBox);
             const hasError = errors.has(`${r}-${c}`);
+            const isSameNumber = highlightedNumber !== null && cell === highlightedNumber && cell !== null;
+            const cellNotes = notes.get(`${r}-${c}`);
 
             const borderRight = (c + 1) % 3 === 0 && c < 8 ? 'border-r-2 border-r-primary/50' : 'border-r border-r-border';
             const borderBottom = (r + 1) % 3 === 0 && r < 8 ? 'border-b-2 border-b-primary/50' : 'border-b border-b-border';
@@ -33,21 +37,38 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({ board, puzzle, selectedCell, 
                 key={c}
                 onClick={() => onCellClick(r, c)}
                 className={`
-                  w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center
+                  w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center relative
                   font-mono text-lg sm:text-xl font-bold transition-all
                   ${borderRight} ${borderBottom}
                   ${isSelected 
                     ? 'bg-primary/20 ring-2 ring-primary ring-inset' 
-                    : isHighlighted 
-                      ? 'bg-muted/60' 
-                      : 'bg-card'
+                    : isSameNumber
+                      ? 'bg-secondary/20 ring-1 ring-secondary ring-inset'
+                      : isHighlighted 
+                        ? 'bg-muted/60' 
+                        : 'bg-card'
                   }
                   ${isOriginal ? 'text-foreground' : 'text-primary'}
                   ${hasError ? 'text-destructive bg-destructive/10' : ''}
-                  ${!isOriginal ? 'cursor-pointer hover:bg-muted/40' : 'cursor-default'}
+                  cursor-pointer hover:bg-muted/40
                 `}
               >
-                {cell || ''}
+                {cell ? (
+                  cell
+                ) : cellNotes && cellNotes.size > 0 ? (
+                  <div className="grid grid-cols-3 gap-0 w-full h-full p-0.5">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                      <span
+                        key={n}
+                        className={`text-[7px] sm:text-[8px] flex items-center justify-center leading-none ${
+                          cellNotes.has(n) ? 'text-accent' : 'text-transparent'
+                        }`}
+                      >
+                        {n}
+                      </span>
+                    ))}
+                  </div>
+                ) : ''}
               </button>
             );
           })}
