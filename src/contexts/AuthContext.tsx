@@ -22,6 +22,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const randomAdjectives = ['Hızlı', 'Cesur', 'Güçlü', 'Parlak', 'Gizli', 'Sessiz', 'Yıldız', 'Çevik', 'Akıllı', 'Kurnaz'];
+const randomNouns = ['Kaplan', 'Kartal', 'Aslan', 'Kurt', 'Şahin', 'Panter', 'Tilki', 'Ejder', 'Phoenix', 'Samurai'];
+
+function generateRandomName(): string {
+  const adj = randomAdjectives[Math.floor(Math.random() * randomAdjectives.length)];
+  const noun = randomNouns[Math.floor(Math.random() * randomNouns.length)];
+  const num = Math.floor(Math.random() * 100);
+  return `${adj}${noun}${num}`;
+}
+
 async function fetchProfile(userId: string): Promise<User | null> {
   const { data } = await supabase
     .from('profiles')
