@@ -8,6 +8,7 @@ import { GameProvider } from "@/contexts/GameContext";
 import Index from "./pages/Index.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
 import SudokuPage from "./pages/SudokuPage.tsx";
+import MemoryPage from "./pages/MemoryPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
