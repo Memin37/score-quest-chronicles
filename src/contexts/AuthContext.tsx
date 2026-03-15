@@ -91,7 +91,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return null;
   };
 
+  const loginAnonymously = () => {
+    setUser({
+      id: `anon-${Date.now()}`,
+      name: generateRandomName(),
+      phone: null,
+      isAnonymous: true,
+    });
+  };
+
   const logout = async () => {
+    if (user?.isAnonymous) {
+      setUser(null);
+      return;
+    }
     await supabase.auth.signOut();
     setUser(null);
   };
