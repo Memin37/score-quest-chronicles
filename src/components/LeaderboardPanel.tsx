@@ -1,7 +1,9 @@
 import React from 'react';
 import { useGame } from '@/contexts/GameContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatTime } from '@/lib/sudoku';
-import { Trophy } from 'lucide-react';
+import { Trophy, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LeaderboardPanelProps {
   game: string;
@@ -16,6 +18,8 @@ const difficultyLabels: Record<string, string> = {
 
 const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty }) => {
   const { getLeaderboard } = useGame();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const entries = getLeaderboard(game, difficulty);
 
   return (
@@ -63,6 +67,16 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
             </div>
           ))}
         </div>
+      )}
+
+      {user?.isAnonymous && (
+        <button
+          onClick={() => navigate('/auth')}
+          className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-md text-sm font-semibold bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-all"
+        >
+          <LogIn className="w-4 h-4" />
+          Skor kaydetmek için giriş yap
+        </button>
       )}
     </div>
   );

@@ -10,7 +10,7 @@ const ProfilePage = () => {
   const [saved, setSaved] = useState(false);
 
   if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
-  if (!user) { navigate('/auth'); return null; }
+  if (!user || user.isAnonymous) { navigate('/auth'); return null; }
 
   const handleSave = async () => {
     if (name.trim()) {

@@ -6,6 +6,7 @@ export interface User {
   id: string;
   name: string;
   phone: string | null;
+  isAnonymous?: boolean;
 }
 
 interface AuthContextType {
@@ -14,11 +15,22 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<string | null>;
   register: (name: string, email: string, password: string) => Promise<string | null>;
   loginWithGoogle: () => Promise<string | null>;
+  loginAnonymously: () => void;
   logout: () => Promise<void>;
   updateProfile: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+const randomAdjectives = ['Hızlı', 'Cesur', 'Güçlü', 'Parlak', 'Gizli', 'Sessiz', 'Yıldız', 'Çevik', 'Akıllı', 'Kurnaz'];
+const randomNouns = ['Kaplan', 'Kartal', 'Aslan', 'Kurt', 'Şahin', 'Panter', 'Tilki', 'Ejder', 'Phoenix', 'Samurai'];
+
+function generateRandomName(): string {
+  const adj = randomAdjectives[Math.floor(Math.random() * randomAdjectives.length)];
+  const noun = randomNouns[Math.floor(Math.random() * randomNouns.length)];
+  const num = Math.floor(Math.random() * 100);
+  return `${adj}${noun}${num}`;
+}
 
 async function fetchProfile(userId: string): Promise<User | null> {
   const { data } = await supabase
@@ -79,7 +91,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return null;
   };
 
+  const loginAnonymously = () => {
+    setUser({
+      id: `anon-${Date.now()}`,
+      name: generateRandomName(),
+      phone: null,
+      isAnonymous: true,
+    });
+  };
+
   const logout = async () => {
+    if (user?.isAnonymous) {
+      setUser(null);
+      return;
+    }
     await supabase.auth.signOut();
     setUser(null);
   };
@@ -91,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, loginAnonymously, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

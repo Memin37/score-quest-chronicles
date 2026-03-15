@@ -61,7 +61,7 @@ const SudokuPage = () => {
   }, [isRunning]);
 
   useEffect(() => {
-    if (!loading && !user) navigate('/auth');
+    if (!loading && !user) navigate('/');
   }, [loading, user]);
 
   const handleStartGame = () => {
@@ -166,7 +166,7 @@ const SudokuPage = () => {
     if (newErrors.size === 0 && checkComplete(newBoard)) {
       setIsRunning(false);
       setIsComplete(true);
-      if (user) {
+      if (user && !user.isAnonymous) {
         addEntry({
           userId: user.id,
           userName: user.name,
@@ -286,6 +286,14 @@ const SudokuPage = () => {
                 <p className="text-foreground text-sm mt-1">
                   Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
                 </p>
+                {user?.isAnonymous && (
+                  <button
+                    onClick={() => navigate('/auth')}
+                    className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
+                  >
+                    Skorunuzu kaydetmek için giriş yapın →
+                  </button>
+                )}
               </div>
             )}
 

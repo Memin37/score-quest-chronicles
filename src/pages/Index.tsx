@@ -20,6 +20,7 @@ const Index = () => {
 
   if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
   if (!user) { navigate('/auth'); return null; }
+  const isAnon = user.isAnonymous;
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
@@ -27,10 +28,11 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="font-display text-xl text-primary neon-text">ARENA</h1>
           <button
-            onClick={() => navigate('/profile')}
+            onClick={() => isAnon ? navigate('/auth') : navigate('/profile')}
             className="flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-md text-foreground text-sm hover:bg-muted/80 transition-all"
           >
             <span>{user.name}</span>
+            {isAnon && <span className="text-xs text-muted-foreground">(Misafir)</span>}
           </button>
         </div>
       </header>
