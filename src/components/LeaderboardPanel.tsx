@@ -18,6 +18,8 @@ const difficultyLabels: Record<string, string> = {
 
 const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty }) => {
   const { getLeaderboard } = useGame();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const entries = getLeaderboard(game, difficulty);
 
   return (
