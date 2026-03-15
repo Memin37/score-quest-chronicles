@@ -12,6 +12,14 @@ const games = [
     path: '/sudoku',
     scoreType: 'En İyi Süre',
   },
+  {
+    id: 'memory',
+    name: 'Hafıza Kartları',
+    description: 'Eşleşen kartları bul, süreye karşı yarış!',
+    icon: '🃏',
+    path: '/memory',
+    scoreType: 'En İyi Süre',
+  },
 ];
 
 const Index = () => {
