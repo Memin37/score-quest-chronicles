@@ -166,7 +166,7 @@ const SudokuPage = () => {
     if (newErrors.size === 0 && checkComplete(newBoard)) {
       setIsRunning(false);
       setIsComplete(true);
-      if (user) {
+      if (user && !user.isAnonymous) {
         addEntry({
           userId: user.id,
           userName: user.name,
