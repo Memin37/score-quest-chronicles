@@ -9,7 +9,7 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, loginWithGoogle, user, loading: authLoading } = useAuth();
+  const { login, register, loginWithGoogle, loginAnonymously, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
