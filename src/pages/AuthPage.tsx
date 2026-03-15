@@ -158,6 +158,19 @@ const AuthPage = () => {
               {loading ? '...' : isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
             </button>
           </form>
+
+          <div className="flex items-center gap-3 mt-4">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-muted-foreground text-xs">veya</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <button
+            onClick={() => { loginAnonymously(); navigate('/'); }}
+            className="w-full mt-4 py-2.5 rounded-md font-semibold text-muted-foreground border border-border hover:bg-muted/80 transition-all text-sm"
+          >
+            🎮 Misafir olarak devam et
+          </button>
         </div>
       </div>
     </div>

@@ -286,6 +286,14 @@ const SudokuPage = () => {
                 <p className="text-foreground text-sm mt-1">
                   Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
                 </p>
+                {user?.isAnonymous && (
+                  <button
+                    onClick={() => navigate('/auth')}
+                    className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
+                  >
+                    Skorunuzu kaydetmek için giriş yapın →
+                  </button>
+                )}
               </div>
             )}
 
