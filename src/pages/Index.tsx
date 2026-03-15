@@ -20,6 +20,7 @@ const Index = () => {
 
   if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
   if (!user) { navigate('/auth'); return null; }
+  const isAnon = user.isAnonymous;
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
