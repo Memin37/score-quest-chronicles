@@ -11,29 +11,36 @@ const MemoryCard: React.FC<Props> = ({ card, onClick, disabled }) => {
   const isRevealed = card.isFlipped || card.isMatched;
 
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled || isRevealed}
-      className={`aspect-square rounded-lg text-3xl sm:text-4xl font-bold transition-all duration-300 transform ${
-        card.isMatched
-          ? 'bg-primary/20 border-2 border-primary/50 scale-95 cursor-default'
-          : isRevealed
-            ? 'bg-card border-2 border-primary neon-box scale-105'
-            : 'bg-muted border-2 border-border hover:border-primary/40 hover:scale-105 cursor-pointer active:scale-95'
-      }`}
-      aria-label={isRevealed ? card.emoji : 'Hidden card'}
-    >
-      <span
-        className={`transition-all duration-300 ${
-          isRevealed ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-        }`}
+    <div className="aspect-square [perspective:600px]">
+      <button
+        onClick={onClick}
+        disabled={disabled || isRevealed}
+        className={`relative w-full h-full [transform-style:preserve-3d] transition-transform duration-500 ease-in-out ${
+          isRevealed ? '[transform:rotateY(180deg)]' : ''
+        } ${!disabled && !isRevealed ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}`}
+        aria-label={isRevealed ? card.emoji : 'Hidden card'}
       >
-        {isRevealed ? card.emoji : ''}
-      </span>
-      {!isRevealed && (
-        <span className="text-muted-foreground text-lg">?</span>
-      )}
-    </button>
+        {/* Back face (question mark) */}
+        <div
+          className={`absolute inset-0 [backface-visibility:hidden] rounded-lg flex items-center justify-center text-lg border-2 transition-colors duration-300 ${
+            'bg-muted border-border hover:border-primary/40'
+          }`}
+        >
+          <span className="text-muted-foreground font-bold text-xl">?</span>
+        </div>
+
+        {/* Front face (emoji) */}
+        <div
+          className={`absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-lg flex items-center justify-center text-3xl sm:text-4xl border-2 transition-all duration-300 ${
+            card.isMatched
+              ? 'bg-primary/20 border-primary/50 scale-95'
+              : 'bg-card border-primary neon-box'
+          }`}
+        >
+          <span>{card.emoji}</span>
+        </div>
+      </button>
+    </div>
   );
 };
 
