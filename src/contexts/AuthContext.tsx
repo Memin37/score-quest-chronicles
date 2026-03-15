@@ -6,6 +6,7 @@ export interface User {
   id: string;
   name: string;
   phone: string | null;
+  isAnonymous?: boolean;
 }
 
 interface AuthContextType {
@@ -14,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<string | null>;
   register: (name: string, email: string, password: string) => Promise<string | null>;
   loginWithGoogle: () => Promise<string | null>;
+  loginAnonymously: () => void;
   logout: () => Promise<void>;
   updateProfile: (name: string) => Promise<void>;
 }
