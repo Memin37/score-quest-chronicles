@@ -61,7 +61,7 @@ const SudokuPage = () => {
   }, [isRunning]);
 
   useEffect(() => {
-    if (!loading && !user) navigate('/auth');
+    if (!loading && !user) navigate('/');
   }, [loading, user]);
 
   const handleStartGame = () => {
