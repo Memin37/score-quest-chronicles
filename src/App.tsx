@@ -8,6 +8,7 @@ import { GameProvider } from "@/contexts/GameContext";
 import Index from "./pages/Index.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
 import SudokuPage from "./pages/SudokuPage.tsx";
+import MemoryPage from "./pages/MemoryPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -25,6 +26,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/sudoku" element={<SudokuPage />} />
+              <Route path="/memory" element={<MemoryPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
