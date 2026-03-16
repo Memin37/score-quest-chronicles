@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Gamepad2, Trophy, Clock, ChevronRight } from 'lucide-react';
 
 const games = [
@@ -27,7 +27,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
-  if (!user) { navigate('/auth'); return null; }
+  if (!user) return <Navigate to="/auth" replace />;
   const isAnon = user.isAnonymous;
 
   return (
