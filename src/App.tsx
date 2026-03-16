@@ -28,6 +28,7 @@ const App = () => (
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/sudoku" element={<SudokuPage />} />
               <Route path="/memory" element={<MemoryPage />} />
+              <Route path="/blockpuzzle" element={<BlockPuzzlePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

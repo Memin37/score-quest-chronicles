@@ -20,6 +20,14 @@ const games = [
     path: '/memory',
     scoreType: 'En İyi Süre',
   },
+  {
+    id: 'blockpuzzle',
+    name: 'Blok Bulmaca',
+    description: 'Tetris parçalarını sürükleyip alanı tamamen doldur!',
+    icon: '🧱',
+    path: '/blockpuzzle',
+    scoreType: 'En İyi Süre',
+  },
 ];
 
 const Index = () => {
