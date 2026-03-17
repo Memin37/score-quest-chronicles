@@ -71,9 +71,13 @@ const BlockPuzzlePage = () => {
     setIsRunning(true);
   };
 
-  const handleDragStart = (piece: PieceShape) => {
+  const handleDragStart = (piece: PieceShape, e: React.DragEvent) => {
     if (!gameStarted || isComplete) return;
     setDraggedPiece(piece);
+    // Use a transparent drag image so we show our own ghost
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(img, 0, 0);
   };
 
   const getCellFromEvent = (e: React.DragEvent): [number, number] | null => {
