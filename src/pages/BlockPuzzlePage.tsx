@@ -94,6 +94,13 @@ const BlockPuzzlePage = () => {
     e.preventDefault();
     const cell = getCellFromEvent(e);
     setHoverCell(cell);
+    setFloatingPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleDragEnd = () => {
+    setFloatingPos(null);
+    setDraggedPiece(null);
+    setHoverCell(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
