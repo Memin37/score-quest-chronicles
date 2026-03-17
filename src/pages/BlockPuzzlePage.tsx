@@ -336,6 +336,7 @@ const BlockPuzzlePage = () => {
                           key={piece.id}
                           draggable
                           onDragStart={(e) => handleDragStart(piece, e)}
+                          onDragEnd={handleDragEnd}
                           onTouchStart={() => handleTouchStart(piece)}
                           className="cursor-grab active:cursor-grabbing p-2 bg-muted/30 border border-border/50 rounded-md hover:border-primary/40 hover:bg-muted/50 transition-all"
                           style={{ touchAction: 'none' }}
