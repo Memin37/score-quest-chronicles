@@ -408,8 +408,48 @@ const BlockPuzzlePage = () => {
           )}
         </div>
       </div>
+
+      {/* Floating ghost piece */}
+      {draggedPiece && floatingPos && (
+        <div
+          className="fixed pointer-events-none z-[100]"
+          style={{
+            left: floatingPos.x,
+            top: floatingPos.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div
+            className="grid gap-px opacity-80"
+            style={{
+              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, 24px)`,
+              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, 24px)`,
+            }}
+          >
+            {Array.from({ length: Math.max(...draggedPiece.cells.map(([r]) => r)) + 1 }, (_, r) =>
+              Array.from({ length: Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1 }, (_, c) => {
+                const filled = draggedPiece.cells.some(([pr, pc]) => pr === r && pc === c);
+                return (
+                  <div
+                    key={`ghost-${r}-${c}`}
+                    className="rounded-sm"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      backgroundColor: filled ? draggedPiece.color : 'transparent',
+                      opacity: filled ? 0.85 : 0,
+                      boxShadow: filled ? `0 0 8px ${draggedPiece.color}` : undefined,
+                    }}
+                  />
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
+};
 };
 
 export default BlockPuzzlePage;
