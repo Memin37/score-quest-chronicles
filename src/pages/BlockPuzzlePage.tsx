@@ -164,9 +164,10 @@ const BlockPuzzlePage = () => {
 
   const handleTouchEnd = () => {
     if (!touchPieceRef.current || !hoverCell) {
-      setHoverCell(null);
-      setDraggedPiece(null);
-      touchPieceRef.current = null;
+    setHoverCell(null);
+    setDraggedPiece(null);
+    setFloatingPos(null);
+    touchPieceRef.current = null;
       return;
     }
 
