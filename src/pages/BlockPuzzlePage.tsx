@@ -38,6 +38,7 @@ const BlockPuzzlePage = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [draggedPiece, setDraggedPiece] = useState<PieceShape | null>(null);
   const [hoverCell, setHoverCell] = useState<[number, number] | null>(null);
+  const [floatingPos, setFloatingPos] = useState<{ x: number; y: number } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const startNewGame = useCallback((diff: BlockDifficulty) => {
