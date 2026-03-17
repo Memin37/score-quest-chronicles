@@ -450,6 +450,5 @@ const BlockPuzzlePage = () => {
     </div>
   );
 };
-};
 
 export default BlockPuzzlePage;
