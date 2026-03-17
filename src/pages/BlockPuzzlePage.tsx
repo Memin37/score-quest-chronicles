@@ -135,6 +135,7 @@ const BlockPuzzlePage = () => {
 
     setHoverCell(null);
     setDraggedPiece(null);
+    setFloatingPos(null);
   };
 
   // Touch support
