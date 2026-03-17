@@ -22,6 +22,9 @@ const difficultyLabels: Record<BlockDifficulty, string> = {
   hard: 'Zor (6×6)',
 };
 
+const GHOST_CELL_PX = 36;
+const LONG_PRESS_MS = 400;
+
 const BlockPuzzlePage = () => {
   const { user, loading, logout } = useAuth();
   const { addEntry } = useGame();
@@ -41,9 +44,18 @@ const BlockPuzzlePage = () => {
   const [floatingPos, setFloatingPos] = useState<{ x: number; y: number } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  // Track which piece occupies each cell for repositioning
+  const [pieceIdGrid, setPieceIdGrid] = useState<(string | null)[][]>([]);
+  const placedPiecesRef = useRef<Map<string, PieceShape>>(new Map());
+
+  // Long press state
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressActiveRef = useRef(false);
+
   const startNewGame = useCallback((diff: BlockDifficulty) => {
     const { pieces: newPieces, gridSize: size } = generatePuzzle(diff);
     setGrid(createEmptyGrid(size));
+    setPieceIdGrid(createEmptyGrid(size) as (string | null)[][]);
     setPieces(newPieces);
     setGridSize(size);
     setTimer(0);
@@ -52,6 +64,7 @@ const BlockPuzzlePage = () => {
     setGameStarted(false);
     setDraggedPiece(null);
     setHoverCell(null);
+    placedPiecesRef.current = new Map();
   }, []);
 
   useEffect(() => { startNewGame(difficulty); }, []);
@@ -71,10 +84,61 @@ const BlockPuzzlePage = () => {
     setIsRunning(true);
   };
 
+  // --- Place a piece and track it ---
+  const placeAndTrack = (piece: PieceShape, row: number, col: number) => {
+    const newGrid = placePieceOnGrid(grid, piece, row, col);
+    setGrid(newGrid);
+
+    const newIdGrid = pieceIdGrid.map(r => [...r]);
+    piece.cells.forEach(([dr, dc]) => {
+      newIdGrid[row + dr][col + dc] = piece.id;
+    });
+    setPieceIdGrid(newIdGrid);
+
+    placedPiecesRef.current.set(piece.id, piece);
+    setPieces(prev => prev.filter(p => p.id !== piece.id));
+
+    if (isGridComplete(newGrid)) {
+      setIsRunning(false);
+      setIsComplete(true);
+      if (user && !user.isAnonymous) {
+        addEntry({
+          userId: user.id,
+          userName: user.name,
+          game: 'blockpuzzle',
+          difficulty,
+          score: timer,
+        });
+      }
+    }
+  };
+
+  // --- Remove a placed piece from grid ---
+  const removePieceFromGrid = (pieceId: string): PieceShape | null => {
+    const piece = placedPiecesRef.current.get(pieceId);
+    if (!piece) return null;
+
+    // Find where it was placed by scanning pieceIdGrid
+    const newGrid = grid.map(r => [...r]);
+    const newIdGrid = pieceIdGrid.map(r => [...r]);
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (newIdGrid[r][c] === pieceId) {
+          newGrid[r][c] = null;
+          newIdGrid[r][c] = null;
+        }
+      }
+    }
+    setGrid(newGrid);
+    setPieceIdGrid(newIdGrid);
+    placedPiecesRef.current.delete(pieceId);
+    return piece;
+  };
+
+  // --- Drag from tray ---
   const handleDragStart = (piece: PieceShape, e: React.DragEvent) => {
     if (!gameStarted || isComplete) return;
     setDraggedPiece(piece);
-    // Use a transparent drag image so we show our own ghost
     const img = new Image();
     img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     e.dataTransfer.setDragImage(img, 0, 0);
@@ -114,23 +178,7 @@ const BlockPuzzlePage = () => {
 
     const [row, col] = cell;
     if (canPlaceOnGrid(grid, draggedPiece, row, col, gridSize)) {
-      const newGrid = placePieceOnGrid(grid, draggedPiece, row, col);
-      setGrid(newGrid);
-      setPieces(prev => prev.filter(p => p.id !== draggedPiece.id));
-
-      if (isGridComplete(newGrid)) {
-        setIsRunning(false);
-        setIsComplete(true);
-        if (user && !user.isAnonymous) {
-          addEntry({
-            userId: user.id,
-            userName: user.name,
-            game: 'blockpuzzle',
-            difficulty,
-            score: timer,
-          });
-        }
-      }
+      placeAndTrack(draggedPiece, row, col);
     }
 
     setHoverCell(null);
@@ -138,10 +186,9 @@ const BlockPuzzlePage = () => {
     setFloatingPos(null);
   };
 
-  // Touch support
+  // --- Touch support ---
   const touchPieceRef = useRef<PieceShape | null>(null);
 
-  // Prevent page scroll during drag with non-passive listener
   useEffect(() => {
     const handler = (e: TouchEvent) => {
       if (touchPieceRef.current) {
@@ -175,38 +222,57 @@ const BlockPuzzlePage = () => {
 
   const handleTouchEnd = () => {
     if (!touchPieceRef.current || !hoverCell) {
-    setHoverCell(null);
-    setDraggedPiece(null);
-    setFloatingPos(null);
-    touchPieceRef.current = null;
+      setHoverCell(null);
+      setDraggedPiece(null);
+      setFloatingPos(null);
+      touchPieceRef.current = null;
       return;
     }
 
     const piece = touchPieceRef.current;
     const [row, col] = hoverCell;
     if (canPlaceOnGrid(grid, piece, row, col, gridSize)) {
-      const newGrid = placePieceOnGrid(grid, piece, row, col);
-      setGrid(newGrid);
-      setPieces(prev => prev.filter(p => p.id !== piece.id));
-
-      if (isGridComplete(newGrid)) {
-        setIsRunning(false);
-        setIsComplete(true);
-        if (user && !user.isAnonymous) {
-          addEntry({
-            userId: user.id,
-            userName: user.name,
-            game: 'blockpuzzle',
-            difficulty,
-            score: timer,
-          });
-        }
-      }
+      placeAndTrack(piece, row, col);
     }
 
     setHoverCell(null);
     setDraggedPiece(null);
+    setFloatingPos(null);
     touchPieceRef.current = null;
+  };
+
+  // --- Long press on grid cell to pick up placed piece ---
+  const handleGridCellPointerDown = (r: number, c: number, e: React.PointerEvent) => {
+    if (!gameStarted || isComplete) return;
+    const pieceId = pieceIdGrid[r]?.[c];
+    if (!pieceId) return;
+
+    longPressActiveRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressActiveRef.current = true;
+      const piece = removePieceFromGrid(pieceId);
+      if (piece) {
+        // Add back to pieces and start dragging
+        setPieces(prev => [...prev, piece]);
+        touchPieceRef.current = piece;
+        setDraggedPiece(piece);
+        setFloatingPos({ x: e.clientX, y: e.clientY });
+      }
+    }, LONG_PRESS_MS);
+  };
+
+  const handleGridCellPointerUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleGridCellPointerLeave = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
   };
 
   const canPlaceHover = draggedPiece && hoverCell
@@ -316,18 +382,23 @@ const BlockPuzzlePage = () => {
                       row.map((cell, c) => {
                         const isHoverTarget = draggedPiece && hoverCell &&
                           draggedPiece.cells.some(([dr, dc]) => hoverCell[0] + dr === r && hoverCell[1] + dc === c);
+                        const hasPiece = !!pieceIdGrid[r]?.[c];
                         return (
                           <div
                             key={`${r}-${c}`}
                             className={`border border-border/50 transition-all duration-150 ${
-                              cell ? '' : 'bg-muted/20'
+                              cell ? 'cursor-pointer' : 'bg-muted/20'
                             } ${isHoverTarget ? (canPlaceHover ? 'ring-2 ring-primary/60 bg-primary/20' : 'ring-2 ring-destructive/60 bg-destructive/20') : ''}`}
                             style={{
                               width: cellPx,
                               height: cellPx,
                               backgroundColor: cell || undefined,
                               opacity: cell ? 0.85 : undefined,
+                              touchAction: hasPiece ? 'none' : undefined,
                             }}
+                            onPointerDown={hasPiece ? (e) => handleGridCellPointerDown(r, c, e) : undefined}
+                            onPointerUp={hasPiece ? handleGridCellPointerUp : undefined}
+                            onPointerLeave={hasPiece ? handleGridCellPointerLeave : undefined}
                           />
                         );
                       })
@@ -337,7 +408,7 @@ const BlockPuzzlePage = () => {
 
                 {/* Pieces tray */}
                 <div className="mt-6 p-4 bg-card/50 border border-border rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR</p>
+                  <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR — <span className="text-primary/70">Taşımak için basılı tutun</span></p>
                   <div className="flex flex-wrap gap-4 justify-center">
                     {pieces.map(piece => {
                       const maxR = Math.max(...piece.cells.map(([r]) => r)) + 1;
@@ -419,20 +490,20 @@ const BlockPuzzlePage = () => {
         </div>
       </div>
 
-      {/* Floating ghost piece */}
+      {/* Floating ghost piece — larger size */}
       {draggedPiece && floatingPos && (
         <div
           className="fixed pointer-events-none z-[100]"
           style={{
-            left: floatingPos.x - 12,
-            top: floatingPos.y - 12,
+            left: floatingPos.x - 16,
+            top: floatingPos.y - 16,
           }}
         >
           <div
-            className="grid gap-px opacity-80"
+            className="grid gap-px opacity-85"
             style={{
-              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, 24px)`,
-              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, 24px)`,
+              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, ${GHOST_CELL_PX}px)`,
+              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, ${GHOST_CELL_PX}px)`,
             }}
           >
             {Array.from({ length: Math.max(...draggedPiece.cells.map(([r]) => r)) + 1 }, (_, r) =>
@@ -443,11 +514,11 @@ const BlockPuzzlePage = () => {
                     key={`ghost-${r}-${c}`}
                     className="rounded-sm"
                     style={{
-                      width: 24,
-                      height: 24,
+                      width: GHOST_CELL_PX,
+                      height: GHOST_CELL_PX,
                       backgroundColor: filled ? draggedPiece.color : 'transparent',
-                      opacity: filled ? 0.85 : 0,
-                      boxShadow: filled ? `0 0 8px ${draggedPiece.color}` : undefined,
+                      opacity: filled ? 0.9 : 0,
+                      boxShadow: filled ? `0 0 10px ${draggedPiece.color}` : undefined,
                     }}
                   />
                 );
