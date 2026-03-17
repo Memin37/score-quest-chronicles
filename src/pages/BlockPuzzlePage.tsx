@@ -141,6 +141,17 @@ const BlockPuzzlePage = () => {
   // Touch support
   const touchPieceRef = useRef<PieceShape | null>(null);
 
+  // Prevent page scroll during drag with non-passive listener
+  useEffect(() => {
+    const handler = (e: TouchEvent) => {
+      if (touchPieceRef.current) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('touchmove', handler, { passive: false });
+    return () => document.removeEventListener('touchmove', handler);
+  }, []);
+
   const handleTouchStart = (piece: PieceShape) => {
     if (!gameStarted || isComplete) return;
     touchPieceRef.current = piece;
@@ -149,7 +160,6 @@ const BlockPuzzlePage = () => {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchPieceRef.current || !gridRef.current) return;
-    e.preventDefault();
     const touch = e.touches[0];
     setFloatingPos({ x: touch.clientX, y: touch.clientY });
     const rect = gridRef.current.getBoundingClientRect();
