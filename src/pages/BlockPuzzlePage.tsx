@@ -424,9 +424,8 @@ const BlockPuzzlePage = () => {
         <div
           className="fixed pointer-events-none z-[100]"
           style={{
-            left: floatingPos.x,
-            top: floatingPos.y,
-            transform: 'translate(-50%, -50%)',
+            left: floatingPos.x - 12,
+            top: floatingPos.y - 12,
           }}
         >
           <div
