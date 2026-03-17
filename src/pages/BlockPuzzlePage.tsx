@@ -38,6 +38,7 @@ const BlockPuzzlePage = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [draggedPiece, setDraggedPiece] = useState<PieceShape | null>(null);
   const [hoverCell, setHoverCell] = useState<[number, number] | null>(null);
+  const [floatingPos, setFloatingPos] = useState<{ x: number; y: number } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const startNewGame = useCallback((diff: BlockDifficulty) => {
@@ -70,9 +71,13 @@ const BlockPuzzlePage = () => {
     setIsRunning(true);
   };
 
-  const handleDragStart = (piece: PieceShape) => {
+  const handleDragStart = (piece: PieceShape, e: React.DragEvent) => {
     if (!gameStarted || isComplete) return;
     setDraggedPiece(piece);
+    // Use a transparent drag image so we show our own ghost
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(img, 0, 0);
   };
 
   const getCellFromEvent = (e: React.DragEvent): [number, number] | null => {
@@ -89,6 +94,13 @@ const BlockPuzzlePage = () => {
     e.preventDefault();
     const cell = getCellFromEvent(e);
     setHoverCell(cell);
+    setFloatingPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleDragEnd = () => {
+    setFloatingPos(null);
+    setDraggedPiece(null);
+    setHoverCell(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -123,6 +135,7 @@ const BlockPuzzlePage = () => {
 
     setHoverCell(null);
     setDraggedPiece(null);
+    setFloatingPos(null);
   };
 
   // Touch support
@@ -138,6 +151,7 @@ const BlockPuzzlePage = () => {
     if (!touchPieceRef.current || !gridRef.current) return;
     e.preventDefault();
     const touch = e.touches[0];
+    setFloatingPos({ x: touch.clientX, y: touch.clientY });
     const rect = gridRef.current.getBoundingClientRect();
     const cellSize = rect.width / gridSize;
     const col = Math.floor((touch.clientX - rect.left) / cellSize);
@@ -151,9 +165,10 @@ const BlockPuzzlePage = () => {
 
   const handleTouchEnd = () => {
     if (!touchPieceRef.current || !hoverCell) {
-      setHoverCell(null);
-      setDraggedPiece(null);
-      touchPieceRef.current = null;
+    setHoverCell(null);
+    setDraggedPiece(null);
+    setFloatingPos(null);
+    touchPieceRef.current = null;
       return;
     }
 
@@ -322,7 +337,8 @@ const BlockPuzzlePage = () => {
                         <div
                           key={piece.id}
                           draggable
-                          onDragStart={() => handleDragStart(piece)}
+                          onDragStart={(e) => handleDragStart(piece, e)}
+                          onDragEnd={handleDragEnd}
                           onTouchStart={() => handleTouchStart(piece)}
                           className="cursor-grab active:cursor-grabbing p-2 bg-muted/30 border border-border/50 rounded-md hover:border-primary/40 hover:bg-muted/50 transition-all"
                           style={{ touchAction: 'none' }}
@@ -392,6 +408,45 @@ const BlockPuzzlePage = () => {
           )}
         </div>
       </div>
+
+      {/* Floating ghost piece */}
+      {draggedPiece && floatingPos && (
+        <div
+          className="fixed pointer-events-none z-[100]"
+          style={{
+            left: floatingPos.x,
+            top: floatingPos.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div
+            className="grid gap-px opacity-80"
+            style={{
+              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, 24px)`,
+              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, 24px)`,
+            }}
+          >
+            {Array.from({ length: Math.max(...draggedPiece.cells.map(([r]) => r)) + 1 }, (_, r) =>
+              Array.from({ length: Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1 }, (_, c) => {
+                const filled = draggedPiece.cells.some(([pr, pc]) => pr === r && pc === c);
+                return (
+                  <div
+                    key={`ghost-${r}-${c}`}
+                    className="rounded-sm"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      backgroundColor: filled ? draggedPiece.color : 'transparent',
+                      opacity: filled ? 0.85 : 0,
+                      boxShadow: filled ? `0 0 8px ${draggedPiece.color}` : undefined,
+                    }}
+                  />
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
