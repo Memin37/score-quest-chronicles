@@ -150,6 +150,7 @@ const BlockPuzzlePage = () => {
     if (!touchPieceRef.current || !gridRef.current) return;
     e.preventDefault();
     const touch = e.touches[0];
+    setFloatingPos({ x: touch.clientX, y: touch.clientY });
     const rect = gridRef.current.getBoundingClientRect();
     const cellSize = rect.width / gridSize;
     const col = Math.floor((touch.clientX - rect.left) / cellSize);
