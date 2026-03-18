@@ -426,6 +426,7 @@ const BlockPuzzlePage = () => {
                             onPointerDown={hasPiece ? (e) => handleGridCellPointerDown(r, c, e) : undefined}
                             onPointerUp={hasPiece ? handleGridCellPointerUp : undefined}
                             onPointerLeave={hasPiece ? handleGridCellPointerLeave : undefined}
+                            onContextMenu={hasPiece ? (e) => handleGridCellContextMenu(r, c, e) : undefined}
                           />
                         );
                       })
