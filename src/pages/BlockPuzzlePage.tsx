@@ -22,7 +22,7 @@ const difficultyLabels: Record<BlockDifficulty, string> = {
   hard: 'Zor (6×6)',
 };
 
-const GHOST_CELL_PX = 36;
+// Ghost cell size is now dynamic, matching grid cell size
 const LONG_PRESS_MS = 400;
 
 const BlockPuzzlePage = () => {
