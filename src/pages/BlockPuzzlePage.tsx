@@ -530,8 +530,8 @@ const BlockPuzzlePage = () => {
           <div
             className="grid gap-px opacity-85"
             style={{
-              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, ${GHOST_CELL_PX}px)`,
-              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, ${GHOST_CELL_PX}px)`,
+              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, ${cellPx}px)`,
+              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, ${cellPx}px)`,
             }}
           >
             {Array.from({ length: Math.max(...draggedPiece.cells.map(([r]) => r)) + 1 }, (_, r) =>
@@ -542,11 +542,11 @@ const BlockPuzzlePage = () => {
                     key={`ghost-${r}-${c}`}
                     className="rounded-sm"
                     style={{
-                      width: GHOST_CELL_PX,
-                      height: GHOST_CELL_PX,
+                      width: cellPx,
+                      height: cellPx,
                       backgroundColor: filled ? draggedPiece.color : 'transparent',
                       opacity: filled ? 0.9 : 0,
-                      boxShadow: filled ? `0 0 10px ${draggedPiece.color}` : undefined,
+                      boxShadow: filled ? `0 0 12px ${draggedPiece.color}` : undefined,
                     }}
                   />
                 );
