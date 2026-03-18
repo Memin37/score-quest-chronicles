@@ -242,23 +242,50 @@ const BlockPuzzlePage = () => {
   };
 
   // --- Long press on grid cell to pick up placed piece ---
+  // Detect touch device
+  const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
   const handleGridCellPointerDown = (r: number, c: number, e: React.PointerEvent) => {
     if (!gameStarted || isComplete) return;
     const pieceId = pieceIdGrid[r]?.[c];
     if (!pieceId) return;
 
-    longPressActiveRef.current = false;
-    longPressTimerRef.current = setTimeout(() => {
-      longPressActiveRef.current = true;
-      const piece = removePieceFromGrid(pieceId);
-      if (piece) {
-        // Add back to pieces and start dragging
-        setPieces(prev => [...prev, piece]);
-        touchPieceRef.current = piece;
-        setDraggedPiece(piece);
-        setFloatingPos({ x: e.clientX, y: e.clientY });
+    if (isTouchDevice()) {
+      // Mobile: long press to pick up
+      longPressActiveRef.current = false;
+      longPressTimerRef.current = setTimeout(() => {
+        longPressActiveRef.current = true;
+        const piece = removePieceFromGrid(pieceId);
+        if (piece) {
+          setPieces(prev => [...prev, piece]);
+          touchPieceRef.current = piece;
+          setDraggedPiece(piece);
+          setFloatingPos({ x: e.clientX, y: e.clientY });
+        }
+      }, LONG_PRESS_MS);
+    } else {
+      // PC: left click instantly picks up the piece
+      if (e.button === 0) {
+        const piece = removePieceFromGrid(pieceId);
+        if (piece) {
+          setPieces(prev => [...prev, piece]);
+          setDraggedPiece(piece);
+          setFloatingPos({ x: e.clientX, y: e.clientY });
+        }
       }
-    }, LONG_PRESS_MS);
+    }
+  };
+
+  // PC: right-click removes placed piece back to tray
+  const handleGridCellContextMenu = (r: number, c: number, e: React.MouseEvent) => {
+    if (!gameStarted || isComplete) return;
+    const pieceId = pieceIdGrid[r]?.[c];
+    if (!pieceId) return;
+    e.preventDefault();
+    const piece = removePieceFromGrid(pieceId);
+    if (piece) {
+      setPieces(prev => [...prev, piece]);
+    }
   };
 
   const handleGridCellPointerUp = () => {
