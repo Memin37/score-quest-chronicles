@@ -22,7 +22,7 @@ const difficultyLabels: Record<BlockDifficulty, string> = {
   hard: 'Zor (6×6)',
 };
 
-const GHOST_CELL_PX = 36;
+// Ghost cell size is now dynamic, matching grid cell size
 const LONG_PRESS_MS = 400;
 
 const BlockPuzzlePage = () => {
@@ -242,23 +242,50 @@ const BlockPuzzlePage = () => {
   };
 
   // --- Long press on grid cell to pick up placed piece ---
+  // Detect touch device
+  const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
   const handleGridCellPointerDown = (r: number, c: number, e: React.PointerEvent) => {
     if (!gameStarted || isComplete) return;
     const pieceId = pieceIdGrid[r]?.[c];
     if (!pieceId) return;
 
-    longPressActiveRef.current = false;
-    longPressTimerRef.current = setTimeout(() => {
-      longPressActiveRef.current = true;
-      const piece = removePieceFromGrid(pieceId);
-      if (piece) {
-        // Add back to pieces and start dragging
-        setPieces(prev => [...prev, piece]);
-        touchPieceRef.current = piece;
-        setDraggedPiece(piece);
-        setFloatingPos({ x: e.clientX, y: e.clientY });
+    if (isTouchDevice()) {
+      // Mobile: long press to pick up
+      longPressActiveRef.current = false;
+      longPressTimerRef.current = setTimeout(() => {
+        longPressActiveRef.current = true;
+        const piece = removePieceFromGrid(pieceId);
+        if (piece) {
+          setPieces(prev => [...prev, piece]);
+          touchPieceRef.current = piece;
+          setDraggedPiece(piece);
+          setFloatingPos({ x: e.clientX, y: e.clientY });
+        }
+      }, LONG_PRESS_MS);
+    } else {
+      // PC: left click instantly picks up the piece
+      if (e.button === 0) {
+        const piece = removePieceFromGrid(pieceId);
+        if (piece) {
+          setPieces(prev => [...prev, piece]);
+          setDraggedPiece(piece);
+          setFloatingPos({ x: e.clientX, y: e.clientY });
+        }
       }
-    }, LONG_PRESS_MS);
+    }
+  };
+
+  // PC: right-click removes placed piece back to tray
+  const handleGridCellContextMenu = (r: number, c: number, e: React.MouseEvent) => {
+    if (!gameStarted || isComplete) return;
+    const pieceId = pieceIdGrid[r]?.[c];
+    if (!pieceId) return;
+    e.preventDefault();
+    const piece = removePieceFromGrid(pieceId);
+    if (piece) {
+      setPieces(prev => [...prev, piece]);
+    }
   };
 
   const handleGridCellPointerUp = () => {
@@ -399,6 +426,7 @@ const BlockPuzzlePage = () => {
                             onPointerDown={hasPiece ? (e) => handleGridCellPointerDown(r, c, e) : undefined}
                             onPointerUp={hasPiece ? handleGridCellPointerUp : undefined}
                             onPointerLeave={hasPiece ? handleGridCellPointerLeave : undefined}
+                            onContextMenu={hasPiece ? (e) => handleGridCellContextMenu(r, c, e) : undefined}
                           />
                         );
                       })
@@ -502,8 +530,8 @@ const BlockPuzzlePage = () => {
           <div
             className="grid gap-px opacity-85"
             style={{
-              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, ${GHOST_CELL_PX}px)`,
-              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, ${GHOST_CELL_PX}px)`,
+              gridTemplateColumns: `repeat(${Math.max(...draggedPiece.cells.map(([, c]) => c)) + 1}, ${cellPx}px)`,
+              gridTemplateRows: `repeat(${Math.max(...draggedPiece.cells.map(([r]) => r)) + 1}, ${cellPx}px)`,
             }}
           >
             {Array.from({ length: Math.max(...draggedPiece.cells.map(([r]) => r)) + 1 }, (_, r) =>
@@ -514,11 +542,11 @@ const BlockPuzzlePage = () => {
                     key={`ghost-${r}-${c}`}
                     className="rounded-sm"
                     style={{
-                      width: GHOST_CELL_PX,
-                      height: GHOST_CELL_PX,
+                      width: cellPx,
+                      height: cellPx,
                       backgroundColor: filled ? draggedPiece.color : 'transparent',
                       opacity: filled ? 0.9 : 0,
-                      boxShadow: filled ? `0 0 10px ${draggedPiece.color}` : undefined,
+                      boxShadow: filled ? `0 0 12px ${draggedPiece.color}` : undefined,
                     }}
                   />
                 );
