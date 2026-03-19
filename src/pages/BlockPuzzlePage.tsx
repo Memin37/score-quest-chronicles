@@ -199,6 +199,59 @@ const BlockPuzzlePage = () => {
     return () => document.removeEventListener('touchmove', handler);
   }, []);
 
+  // PC: track mouse movement when carrying a piece (picked up via left-click)
+  useEffect(() => {
+    if (!draggedPiece || isTouchDevice()) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setFloatingPos({ x: e.clientX, y: e.clientY });
+      if (gridRef.current) {
+        const rect = gridRef.current.getBoundingClientRect();
+        const cellSize = rect.width / gridSize;
+        const col = Math.floor((e.clientX - rect.left) / cellSize);
+        const row = Math.floor((e.clientY - rect.top) / cellSize);
+        if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+          setHoverCell([row, col]);
+        } else {
+          setHoverCell(null);
+        }
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      if (!gridRef.current || !draggedPiece) return;
+      const rect = gridRef.current.getBoundingClientRect();
+      const cellSize = rect.width / gridSize;
+      const col = Math.floor((e.clientX - rect.left) / cellSize);
+      const row = Math.floor((e.clientY - rect.top) / cellSize);
+      if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+        if (canPlaceOnGrid(grid, draggedPiece, row, col, gridSize)) {
+          placeAndTrack(draggedPiece, row, col);
+        }
+      }
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('click', handleClick);
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [draggedPiece, grid, gridSize]);
+
   const handleTouchStart = (piece: PieceShape) => {
     if (!gameStarted || isComplete) return;
     touchPieceRef.current = piece;
