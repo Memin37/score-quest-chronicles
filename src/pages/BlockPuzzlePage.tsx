@@ -199,6 +199,59 @@ const BlockPuzzlePage = () => {
     return () => document.removeEventListener('touchmove', handler);
   }, []);
 
+  // PC: track mouse movement when carrying a piece (picked up via left-click)
+  useEffect(() => {
+    if (!draggedPiece || isTouchDevice()) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setFloatingPos({ x: e.clientX, y: e.clientY });
+      if (gridRef.current) {
+        const rect = gridRef.current.getBoundingClientRect();
+        const cellSize = rect.width / gridSize;
+        const col = Math.floor((e.clientX - rect.left) / cellSize);
+        const row = Math.floor((e.clientY - rect.top) / cellSize);
+        if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+          setHoverCell([row, col]);
+        } else {
+          setHoverCell(null);
+        }
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      if (!gridRef.current || !draggedPiece) return;
+      const rect = gridRef.current.getBoundingClientRect();
+      const cellSize = rect.width / gridSize;
+      const col = Math.floor((e.clientX - rect.left) / cellSize);
+      const row = Math.floor((e.clientY - rect.top) / cellSize);
+      if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+        if (canPlaceOnGrid(grid, draggedPiece, row, col, gridSize)) {
+          placeAndTrack(draggedPiece, row, col);
+        }
+      }
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('click', handleClick);
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [draggedPiece, grid, gridSize]);
+
   const handleTouchStart = (piece: PieceShape) => {
     if (!gameStarted || isComplete) return;
     touchPieceRef.current = piece;
@@ -264,7 +317,7 @@ const BlockPuzzlePage = () => {
         }
       }, LONG_PRESS_MS);
     } else {
-      // PC: left click instantly picks up the piece
+      // PC: left click picks up piece to follow mouse
       if (e.button === 0) {
         const piece = removePieceFromGrid(pieceId);
         if (piece) {
@@ -276,15 +329,33 @@ const BlockPuzzlePage = () => {
     }
   };
 
-  // PC: right-click removes placed piece back to tray
+  // PC: right-click → if dragging cancel drag, otherwise remove placed piece to tray
   const handleGridCellContextMenu = (r: number, c: number, e: React.MouseEvent) => {
     if (!gameStarted || isComplete) return;
+    e.preventDefault();
+
+    if (draggedPiece) {
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
+      return;
+    }
+
     const pieceId = pieceIdGrid[r]?.[c];
     if (!pieceId) return;
-    e.preventDefault();
     const piece = removePieceFromGrid(pieceId);
     if (piece) {
       setPieces(prev => [...prev, piece]);
+    }
+  };
+
+  // Right-click on grid container to cancel drag
+  const handleGridContextMenu = (e: React.MouseEvent) => {
+    if (draggedPiece) {
+      e.preventDefault();
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
     }
   };
 
@@ -397,6 +468,7 @@ const BlockPuzzlePage = () => {
                   onDragLeave={() => setHoverCell(null)}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
+                  onContextMenu={handleGridContextMenu}
                 >
                   <div
                     className="grid"
