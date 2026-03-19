@@ -264,7 +264,7 @@ const BlockPuzzlePage = () => {
         }
       }, LONG_PRESS_MS);
     } else {
-      // PC: left click instantly picks up the piece
+      // PC: left click picks up piece to follow mouse
       if (e.button === 0) {
         const piece = removePieceFromGrid(pieceId);
         if (piece) {
@@ -276,15 +276,33 @@ const BlockPuzzlePage = () => {
     }
   };
 
-  // PC: right-click removes placed piece back to tray
+  // PC: right-click → if dragging cancel drag, otherwise remove placed piece to tray
   const handleGridCellContextMenu = (r: number, c: number, e: React.MouseEvent) => {
     if (!gameStarted || isComplete) return;
+    e.preventDefault();
+
+    if (draggedPiece) {
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
+      return;
+    }
+
     const pieceId = pieceIdGrid[r]?.[c];
     if (!pieceId) return;
-    e.preventDefault();
     const piece = removePieceFromGrid(pieceId);
     if (piece) {
       setPieces(prev => [...prev, piece]);
+    }
+  };
+
+  // Right-click on grid container to cancel drag
+  const handleGridContextMenu = (e: React.MouseEvent) => {
+    if (draggedPiece) {
+      e.preventDefault();
+      setDraggedPiece(null);
+      setHoverCell(null);
+      setFloatingPos(null);
     }
   };
 
