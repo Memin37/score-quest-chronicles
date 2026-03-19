@@ -415,6 +415,7 @@ const BlockPuzzlePage = () => {
                   onDragLeave={() => setHoverCell(null)}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
+                  onContextMenu={handleGridContextMenu}
                 >
                   <div
                     className="grid"
