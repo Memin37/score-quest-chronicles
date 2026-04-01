@@ -47,6 +47,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let loadingResolved = false;
+    const resolveLoading = () => {
+      if (!loadingResolved) {
+        loadingResolved = true;
+        setLoading(false);
+      }
+    };
+
+    // Safety timeout - never stay on loading screen forever
+    const timeout = setTimeout(resolveLoading, 5000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
         if (session?.user) {
@@ -61,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser({ id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
         }
       } finally {
-        setLoading(false);
+        resolveLoading();
       }
     });
 
@@ -77,11 +88,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser({ id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
         }
       } finally {
-        setLoading(false);
+        resolveLoading();
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const register = async (name: string, email: string, password: string): Promise<string | null> => {
