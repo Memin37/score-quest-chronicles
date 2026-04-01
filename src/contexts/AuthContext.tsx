@@ -48,21 +48,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile || { id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
-      } else {
-        setUser(null);
+      try {
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          setUser(profile || { id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Auth state change error:', err);
+        if (session?.user) {
+          setUser({ id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile || { id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+      try {
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          setUser(profile || { id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+        }
+      } catch (err) {
+        console.error('Get session error:', err);
+        if (session?.user) {
+          setUser({ id: session.user.id, name: session.user.user_metadata?.full_name || 'Oyuncu', phone: null });
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
