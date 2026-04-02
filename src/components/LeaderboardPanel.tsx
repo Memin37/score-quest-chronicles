@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatTime } from '@/lib/sudoku';
@@ -16,22 +16,53 @@ const difficultyLabels: Record<string, string> = {
   hard: 'Zor',
 };
 
+type Tab = 'weekly' | 'alltime';
+
 const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty }) => {
-  const { getLeaderboard } = useGame();
+  const { getLeaderboard, getAllTimeLeaderboard } = useGame();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const entries = getLeaderboard(game, difficulty);
+  const [tab, setTab] = useState<Tab>('weekly');
+
+  const entries = tab === 'weekly'
+    ? getLeaderboard(game, difficulty)
+    : getAllTimeLeaderboard(game, difficulty);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 neon-box w-full">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         <Trophy className="w-5 h-5 text-accent" />
         <h3 className="font-display text-xs text-accent neon-text">
           SKOR TABLOSU
         </h3>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-3 bg-muted/30 rounded-md p-0.5">
+        <button
+          onClick={() => setTab('weekly')}
+          className={`flex-1 text-xs py-1.5 rounded transition-all font-medium ${
+            tab === 'weekly'
+              ? 'bg-accent/20 text-accent border border-accent/30'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Bu Hafta
+        </button>
+        <button
+          onClick={() => setTab('alltime')}
+          className={`flex-1 text-xs py-1.5 rounded transition-all font-medium ${
+            tab === 'alltime'
+              ? 'bg-accent/20 text-accent border border-accent/30'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Tüm Zamanlar
+        </button>
+      </div>
+
       <p className="text-muted-foreground text-xs mb-3">
-        {difficultyLabels[difficulty]} • Bu Hafta
+        {difficultyLabels[difficulty]}
       </p>
 
       {entries.length === 0 ? (

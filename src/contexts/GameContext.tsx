@@ -123,8 +123,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       .sort((a, b) => a.score - b.score);
   };
 
+  const getAllTimeLeaderboard = (game: string, difficulty: string): LeaderboardEntry[] => {
+    return allTimeEntries
+      .filter(e => e.game === game && e.difficulty === difficulty)
+      .sort((a, b) => a.score - b.score);
+  };
+
   return (
-    <GameContext.Provider value={{ entries, addEntry, getLeaderboard, getWeekStart }}>
+    <GameContext.Provider value={{ entries, allTimeEntries, addEntry, getLeaderboard, getAllTimeLeaderboard, getWeekStart }}>
       {children}
     </GameContext.Provider>
   );
