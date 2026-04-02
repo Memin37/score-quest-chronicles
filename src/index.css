@@ -105,4 +105,19 @@
       linear-gradient(90deg, hsl(240 10% 18% / 0.5) 1px, transparent 1px);
     background-size: 40px 40px;
   }
+
+  @keyframes penalty-float {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-28px);
+    }
+  }
+
+  .animate-penalty-float {
+    animation: penalty-float 1.4s ease-out forwards;
+  }
 }

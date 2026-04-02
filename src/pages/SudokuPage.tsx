@@ -5,7 +5,7 @@ import { generateSudoku, checkComplete, formatTime } from '@/lib/sudoku';
 import SudokuBoard from '@/components/SudokuBoard';
 import NumberPad from '@/components/NumberPad';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
-import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
+import { Timer, RotateCcw, Trophy, User, LogOut, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -15,6 +15,13 @@ const difficultyLabels: Record<Difficulty, string> = {
   medium: 'Orta',
   hard: 'Zor',
 };
+
+const PENALTY_SECONDS = 5;
+
+interface PenaltyAnim {
+  id: number;
+  timestamp: number;
+}
 
 const SudokuPage = () => {
   const { user, loading, logout } = useAuth();
@@ -34,6 +41,8 @@ const SudokuPage = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [notesMode, setNotesMode] = useState(false);
   const [notes, setNotes] = useState<Map<string, Set<number>>>(new Map());
+  const [mistakeCount, setMistakeCount] = useState(0);
+  const [penaltyAnims, setPenaltyAnims] = useState<PenaltyAnim[]>([]);
 
   const startNewGame = useCallback((diff: Difficulty) => {
     const { puzzle: p, solution: s } = generateSudoku(diff);
@@ -48,6 +57,8 @@ const SudokuPage = () => {
     setGameStarted(false);
     setNotesMode(false);
     setNotes(new Map());
+    setMistakeCount(0);
+    setPenaltyAnims([]);
   }, []);
 
   useEffect(() => {
@@ -64,15 +75,22 @@ const SudokuPage = () => {
     if (!loading && !user) navigate('/');
   }, [loading, user]);
 
+  // Clean up expired penalty animations
+  useEffect(() => {
+    if (penaltyAnims.length === 0) return;
+    const timeout = setTimeout(() => {
+      setPenaltyAnims(prev => prev.filter(p => Date.now() - p.timestamp < 1500));
+    }, 1600);
+    return () => clearTimeout(timeout);
+  }, [penaltyAnims]);
+
   const handleStartGame = () => {
     setGameStarted(true);
     setIsRunning(true);
   };
 
-  // Determine highlighted number from selected cell
   const highlightedNumber = selectedCell ? board[selectedCell[0]][selectedCell[1]] : null;
 
-  // Find numbers that are fully and correctly placed (all 9 instances with no conflicts)
   const completedNumbers = React.useMemo(() => {
     const completed = new Set<number>();
     for (let num = 1; num <= 9; num++) {
@@ -102,21 +120,18 @@ const SudokuPage = () => {
       for (let c = 0; c < 9; c++) {
         const val = currentBoard[r][c];
         if (val === null) continue;
-        // Check row
         for (let cc = 0; cc < 9; cc++) {
           if (cc !== c && currentBoard[r][cc] === val) {
             conflicts.add(`${r}-${c}`);
             conflicts.add(`${r}-${cc}`);
           }
         }
-        // Check col
         for (let rr = 0; rr < 9; rr++) {
           if (rr !== r && currentBoard[rr][c] === val) {
             conflicts.add(`${r}-${c}`);
             conflicts.add(`${rr}-${c}`);
           }
         }
-        // Check box
         const br = Math.floor(r / 3) * 3;
         const bc = Math.floor(c / 3) * 3;
         for (let rr = br; rr < br + 3; rr++) {
@@ -163,6 +178,13 @@ const SudokuPage = () => {
     const newErrors = findConflicts(newBoard);
     setErrors(newErrors);
 
+    // Check if the placed number is wrong compared to solution
+    if (solution[r] && solution[r][c] !== num) {
+      setMistakeCount(prev => prev + 1);
+      setTimer(prev => prev + PENALTY_SECONDS);
+      setPenaltyAnims(prev => [...prev, { id: Date.now(), timestamp: Date.now() }]);
+    }
+
     if (newErrors.size === 0 && checkComplete(newBoard)) {
       setIsRunning(false);
       setIsComplete(true);
@@ -172,7 +194,7 @@ const SudokuPage = () => {
           userName: user.name,
           game: 'sudoku',
           difficulty,
-          score: timer,
+          score: timer + (solution[r] && solution[r][c] !== num ? PENALTY_SECONDS : 0),
         });
       }
     }
@@ -265,12 +287,29 @@ const SudokuPage = () => {
             </div>
 
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
+              <div className="relative flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
                 <Timer className="w-4 h-4 text-primary" />
                 <span className="font-mono text-lg text-foreground font-bold">
                   {formatTime(timer)}
                 </span>
+                {/* Penalty floating animations */}
+                {penaltyAnims.map(anim => (
+                  <span
+                    key={anim.id}
+                    className="absolute -top-1 -right-2 font-mono text-sm font-bold text-destructive pointer-events-none animate-penalty-float"
+                  >
+                    +{PENALTY_SECONDS}s
+                  </span>
+                ))}
               </div>
+              {/* Mistake counter */}
+              {gameStarted && mistakeCount > 0 && (
+                <div className="flex items-center gap-1.5 text-sm text-destructive">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="font-mono font-bold">{mistakeCount}</span>
+                  <span className="text-muted-foreground text-xs">hata</span>
+                </div>
+              )}
               <button
                 onClick={() => startNewGame(difficulty)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition-all text-sm"
@@ -286,6 +325,15 @@ const SudokuPage = () => {
                 <p className="text-foreground text-sm mt-1">
                   Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
                 </p>
+                {mistakeCount > 0 && (
+                  <p className="text-sm mt-1 text-destructive">
+                    <AlertTriangle className="w-3.5 h-3.5 inline mr-1" />
+                    {mistakeCount} hata yaptınız (+{mistakeCount * PENALTY_SECONDS}s ceza)
+                  </p>
+                )}
+                {mistakeCount === 0 && (
+                  <p className="text-sm mt-1 text-accent">✨ Mükemmel! Hiç hata yapmadınız!</p>
+                )}
                 {user?.isAnonymous && (
                   <button
                     onClick={() => navigate('/auth')}
