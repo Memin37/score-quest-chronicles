@@ -43,13 +43,22 @@ const Index = () => {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="font-display text-xl text-primary neon-text">ARENA</h1>
-          <button
-            onClick={() => isAnon ? navigate('/auth') : navigate('/profile')}
-            className="flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-md text-foreground text-sm hover:bg-muted/80 transition-all"
-          >
-            <span>{user.name}</span>
-            {isAnon && <span className="text-xs text-muted-foreground">(Misafir)</span>}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/settings')}
+              className="p-2 text-muted-foreground hover:text-primary transition-colors"
+              title="Ayarlar"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => isAnon ? navigate('/auth') : navigate('/profile')}
+              className="flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-md text-foreground text-sm hover:bg-muted/80 transition-all"
+            >
+              <span>{user.name}</span>
+              {isAnon && <span className="text-xs text-muted-foreground">(Misafir)</span>}
+            </button>
+          </div>
         </div>
       </header>
 
