@@ -31,24 +31,45 @@ const getWeekStart = (): string => {
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [allTimeEntries, setAllTimeEntries] = useState<LeaderboardEntry[]>([]);
+
+  const mapEntries = (data: any[]): LeaderboardEntry[] =>
+    data.map(d => ({
+      userId: d.user_id,
+      userName: d.user_name,
+      game: d.game,
+      difficulty: d.difficulty,
+      score: d.score,
+      weekStart: d.week_start,
+    }));
 
   const fetchEntries = async () => {
     const weekStart = getWeekStart();
-    const { data } = await supabase
-      .from('leaderboard_entries')
-      .select('*')
-      .eq('week_start', weekStart)
-      .order('score', { ascending: true });
+    const [weeklyRes, allTimeRes] = await Promise.all([
+      supabase
+        .from('leaderboard_entries')
+        .select('*')
+        .eq('week_start', weekStart)
+        .order('score', { ascending: true }),
+      supabase
+        .from('leaderboard_entries')
+        .select('*')
+        .order('score', { ascending: true })
+        .limit(100),
+    ]);
 
-    if (data) {
-      setEntries(data.map(d => ({
-        userId: d.user_id,
-        userName: d.user_name,
-        game: d.game,
-        difficulty: d.difficulty,
-        score: d.score,
-        weekStart: d.week_start,
-      })));
+    if (weeklyRes.data) setEntries(mapEntries(weeklyRes.data));
+    if (allTimeRes.data) {
+      // Keep only the best score per user/game/difficulty
+      const best = new Map<string, LeaderboardEntry>();
+      for (const entry of mapEntries(allTimeRes.data)) {
+        const key = `${entry.userId}-${entry.game}-${entry.difficulty}`;
+        const existing = best.get(key);
+        if (!existing || entry.score < existing.score) {
+          best.set(key, entry);
+        }
+      }
+      setAllTimeEntries(Array.from(best.values()).sort((a, b) => a.score - b.score));
     }
   };
 
