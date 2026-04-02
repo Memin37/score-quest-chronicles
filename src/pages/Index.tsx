@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Gamepad2, Trophy, Clock, ChevronRight } from 'lucide-react';
+import { Gamepad2, Trophy, Clock, ChevronRight, Settings } from 'lucide-react';
 
 const games = [
   {
