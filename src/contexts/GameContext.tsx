@@ -12,8 +12,10 @@ interface LeaderboardEntry {
 
 interface GameContextType {
   entries: LeaderboardEntry[];
+  allTimeEntries: LeaderboardEntry[];
   addEntry: (entry: Omit<LeaderboardEntry, 'weekStart'>) => Promise<void>;
   getLeaderboard: (game: string, difficulty: string) => LeaderboardEntry[];
+  getAllTimeLeaderboard: (game: string, difficulty: string) => LeaderboardEntry[];
   getWeekStart: () => string;
 }
 
