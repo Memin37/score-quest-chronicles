@@ -75,9 +75,28 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const { user } = useAuth();
+
   useEffect(() => {
     fetchEntries();
   }, []);
+
+  // Submit pending score after login
+  useEffect(() => {
+    if (user && !user.isAnonymous) {
+      const pending = getPendingScore();
+      if (pending) {
+        clearPendingScore();
+        addEntry({
+          userId: user.id,
+          userName: user.name,
+          game: pending.game,
+          difficulty: pending.difficulty,
+          score: pending.score,
+        });
+      }
+    }
+  }, [user]);
 
   const addEntry = async (entry: Omit<LeaderboardEntry, 'weekStart'>) => {
     const weekStart = getWeekStart();
