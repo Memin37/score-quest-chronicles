@@ -5,6 +5,7 @@ import { generateSudoku, checkComplete, formatTime } from '@/lib/sudoku';
 import SudokuBoard from '@/components/SudokuBoard';
 import NumberPad from '@/components/NumberPad';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
+import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
