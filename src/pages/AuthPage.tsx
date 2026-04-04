@@ -53,7 +53,7 @@ const AuthPage = () => {
     if (err) {
       setError(err);
     } else {
-      navigate('/');
+      navigate(getRedirectPath());
     }
     setLoading(false);
   };
