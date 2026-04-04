@@ -5,6 +5,7 @@ import { generateSudoku, checkComplete, formatTime } from '@/lib/sudoku';
 import SudokuBoard from '@/components/SudokuBoard';
 import NumberPad from '@/components/NumberPad';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
+import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
@@ -268,9 +269,15 @@ const SudokuPage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1">
+      <div className="w-full px-4 py-6">
+        <div className="flex justify-center gap-6">
+          {/* Left Ad */}
+          <div className="hidden xl:block w-40 shrink-0 sticky top-20 self-start">
+            <AdBanner adSlot="LEFT_AD_SLOT" format="vertical" />
+          </div>
+
+          {/* Game content */}
+          <div className="flex-1 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
               {(Object.keys(difficultyLabels) as Difficulty[]).map(d => (
                 <button
@@ -293,7 +300,6 @@ const SudokuPage = () => {
                 <span className="font-mono text-lg text-foreground font-bold">
                   {formatTime(timer)}
                 </span>
-                {/* Penalty floating animations */}
                 {penaltyAnims.map(anim => (
                   <span
                     key={anim.id}
@@ -303,7 +309,6 @@ const SudokuPage = () => {
                   </span>
                 ))}
               </div>
-              {/* Mistake counter */}
               {gameStarted && mistakeCount > 0 && (
                 <div className="flex items-center gap-1.5 text-sm text-destructive">
                   <AlertTriangle className="w-4 h-4" />
@@ -388,8 +393,10 @@ const SudokuPage = () => {
             )}
           </div>
 
-          <div className="hidden lg:block w-80">
+          {/* Right side: Leaderboard + Ad */}
+          <div className="hidden lg:flex flex-col w-80 shrink-0 gap-6">
             <LeaderboardPanel game="sudoku" difficulty={difficulty} />
+            <AdBanner adSlot="RIGHT_AD_SLOT" format="vertical" />
           </div>
 
           {showLeaderboard && (

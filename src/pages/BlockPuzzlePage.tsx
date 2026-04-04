@@ -13,6 +13,7 @@ import {
   type PieceShape,
 } from '@/lib/blockPuzzle';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
+import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
@@ -403,10 +404,15 @@ const BlockPuzzlePage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1">
-            {/* Difficulty */}
+      <div className="w-full px-4 py-6">
+        <div className="flex justify-center gap-6">
+          {/* Left Ad */}
+          <div className="hidden xl:block w-40 shrink-0 sticky top-20 self-start">
+            <AdBanner adSlot="LEFT_AD_SLOT" format="vertical" />
+          </div>
+
+          {/* Game content */}
+          <div className="flex-1 max-w-2xl">
             <div className="flex items-center gap-2 mb-6 flex-wrap">
               {(Object.keys(difficultyLabels) as BlockDifficulty[]).map(d => (
                 <button
@@ -423,7 +429,6 @@ const BlockPuzzlePage = () => {
               ))}
             </div>
 
-            {/* Timer & controls */}
             <div className="flex items-center gap-4 mb-4 flex-wrap">
               <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
                 <Timer className="w-4 h-4 text-primary" />
@@ -441,7 +446,6 @@ const BlockPuzzlePage = () => {
               </button>
             </div>
 
-            {/* Completion */}
             {isComplete && (
               <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg neon-box">
                 <p className="font-display text-xs text-primary neon-text">TEBRİKLER! 🎉</p>
@@ -462,13 +466,11 @@ const BlockPuzzlePage = () => {
               </div>
             )}
 
-            {/* Game area */}
             <div className="relative">
               <div className={!gameStarted ? 'blur-md pointer-events-none select-none' : ''}>
-                {/* Grid */}
                 <div
                   ref={gridRef}
-                  className="border-2 border-border rounded-lg bg-card/50 mx-auto lg:mx-0 relative"
+                  className="border-2 border-border rounded-lg bg-card/50 mx-auto relative"
                   style={{ width: cellPx * gridSize + 4, height: cellPx * gridSize + 4 }}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
@@ -513,7 +515,6 @@ const BlockPuzzlePage = () => {
                   </div>
                 </div>
 
-                {/* Pieces tray */}
                 <div className="mt-6 p-4 bg-card/50 border border-border rounded-lg">
                   <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR — <span className="text-primary/70">Taşımak için basılı tutun</span></p>
                   <div className="flex flex-wrap gap-4 justify-center">
@@ -577,12 +578,12 @@ const BlockPuzzlePage = () => {
             </div>
           </div>
 
-          {/* Leaderboard desktop */}
-          <div className="hidden lg:block w-80">
+          {/* Right side: Leaderboard + Ad */}
+          <div className="hidden lg:flex flex-col w-80 shrink-0 gap-6">
             <LeaderboardPanel game="blockpuzzle" difficulty={difficulty} />
+            <AdBanner adSlot="RIGHT_AD_SLOT" format="vertical" />
           </div>
 
-          {/* Leaderboard mobile */}
           {showLeaderboard && (
             <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
               <div className="max-w-md mx-auto">
