@@ -137,10 +137,15 @@ const MemoryPage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1">
-            {/* Difficulty */}
+      <div className="w-full px-4 py-6">
+        <div className="flex justify-center gap-6">
+          {/* Left Ad */}
+          <div className="hidden xl:block w-40 shrink-0 sticky top-20 self-start">
+            <AdBanner adSlot="LEFT_AD_SLOT" format="vertical" />
+          </div>
+
+          {/* Game content */}
+          <div className="flex-1 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
               {(Object.keys(difficultyLabels) as MemoryDifficulty[]).map(d => (
                 <button
@@ -157,7 +162,6 @@ const MemoryPage = () => {
               ))}
             </div>
 
-            {/* Timer & controls */}
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
                 <Timer className="w-4 h-4 text-primary" />
@@ -175,7 +179,6 @@ const MemoryPage = () => {
               </button>
             </div>
 
-            {/* Completion message */}
             {isComplete && (
               <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg neon-box">
                 <p className="font-display text-xs text-primary neon-text">TEBRİKLER! 🎉</p>
@@ -197,11 +200,10 @@ const MemoryPage = () => {
               </div>
             )}
 
-            {/* Game board */}
             <div className="relative">
               <div className={!gameStarted ? 'blur-md pointer-events-none select-none' : ''}>
                 <div
-                  className="grid gap-2 sm:gap-3 max-w-md mx-auto lg:mx-0"
+                  className="grid gap-2 sm:gap-3 max-w-md mx-auto"
                   style={{ gridTemplateColumns: `repeat(${gridConfig.cols}, 1fr)` }}
                 >
                   {cards.map(card => (
@@ -228,12 +230,12 @@ const MemoryPage = () => {
             </div>
           </div>
 
-          {/* Leaderboard desktop */}
-          <div className="hidden lg:block w-80">
+          {/* Right side: Leaderboard + Ad */}
+          <div className="hidden lg:flex flex-col w-80 shrink-0 gap-6">
             <LeaderboardPanel game="memory" difficulty={difficulty} />
+            <AdBanner adSlot="RIGHT_AD_SLOT" format="vertical" />
           </div>
 
-          {/* Leaderboard mobile */}
           {showLeaderboard && (
             <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
               <div className="max-w-md mx-auto">
