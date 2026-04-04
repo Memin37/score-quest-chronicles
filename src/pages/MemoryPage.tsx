@@ -4,6 +4,7 @@ import { useGame } from '@/contexts/GameContext';
 import { generateMemoryCards, getGridConfig, formatTime, type MemoryCard as MemoryCardType, type MemoryDifficulty } from '@/lib/memory';
 import MemoryCardComponent from '@/components/MemoryCard';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
+import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
