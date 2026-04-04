@@ -7,6 +7,7 @@ import NumberPad from '@/components/NumberPad';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { savePendingScore } from '@/lib/pendingScore';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -336,7 +337,10 @@ const SudokuPage = () => {
                 )}
                 {user?.isAnonymous && (
                   <button
-                    onClick={() => navigate('/auth')}
+                    onClick={() => {
+                      savePendingScore({ game: 'sudoku', difficulty, score: timer, returnPath: '/sudoku' });
+                      navigate('/auth');
+                    }}
                     className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
                   >
                     Skorunuzu kaydetmek için giriş yapın →

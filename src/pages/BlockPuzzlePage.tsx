@@ -15,6 +15,7 @@ import {
 import LeaderboardPanel from '@/components/LeaderboardPanel';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { savePendingScore } from '@/lib/pendingScore';
 
 const difficultyLabels: Record<BlockDifficulty, string> = {
   easy: 'Kolay (4×4)',
@@ -448,7 +449,13 @@ const BlockPuzzlePage = () => {
                   Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
                 </p>
                 {user?.isAnonymous && (
-                  <button onClick={() => navigate('/auth')} className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors">
+                  <button
+                    onClick={() => {
+                      savePendingScore({ game: 'blockpuzzle', difficulty, score: timer, returnPath: '/blockpuzzle' });
+                      navigate('/auth');
+                    }}
+                    className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
+                  >
                     Skorunuzu kaydetmek için giriş yapın →
                   </button>
                 )}
