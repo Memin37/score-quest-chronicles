@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getPendingScore } from '@/lib/pendingScore';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,8 +13,13 @@ const AuthPage = () => {
   const { login, register, loginWithGoogle, loginAnonymously, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  const getRedirectPath = () => {
+    const pending = getPendingScore();
+    return pending?.returnPath || '/';
+  };
+
   useEffect(() => {
-    if (!authLoading && user) navigate('/');
+    if (!authLoading && user) navigate(getRedirectPath());
   }, [authLoading, user, navigate]);
 
   if (authLoading) {
