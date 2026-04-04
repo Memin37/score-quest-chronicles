@@ -13,6 +13,7 @@ import {
   type PieceShape,
 } from '@/lib/blockPuzzle';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
+import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
