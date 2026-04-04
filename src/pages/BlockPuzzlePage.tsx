@@ -15,6 +15,7 @@ import {
 import LeaderboardPanel from '@/components/LeaderboardPanel';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { savePendingScore } from '@/lib/pendingScore';
 
 const difficultyLabels: Record<BlockDifficulty, string> = {
   easy: 'Kolay (4×4)',
