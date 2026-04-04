@@ -337,7 +337,10 @@ const SudokuPage = () => {
                 )}
                 {user?.isAnonymous && (
                   <button
-                    onClick={() => navigate('/auth')}
+                    onClick={() => {
+                      savePendingScore({ game: 'sudoku', difficulty, score: timer, returnPath: '/sudoku' });
+                      navigate('/auth');
+                    }}
                     className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
                   >
                     Skorunuzu kaydetmek için giriş yapın →

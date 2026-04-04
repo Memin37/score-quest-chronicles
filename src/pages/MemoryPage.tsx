@@ -182,7 +182,13 @@ const MemoryPage = () => {
                   {' • '}Hamle: <span className="font-mono font-bold text-primary">{moves}</span>
                 </p>
                 {user?.isAnonymous && (
-                  <button onClick={() => navigate('/auth')} className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors">
+                  <button
+                    onClick={() => {
+                      savePendingScore({ game: 'memory', difficulty, score: timer, returnPath: '/memory' });
+                      navigate('/auth');
+                    }}
+                    className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
+                  >
                     Skorunuzu kaydetmek için giriş yapın →
                   </button>
                 )}
