@@ -19,7 +19,7 @@ const AuthPage = () => {
   };
 
   useEffect(() => {
-    if (!authLoading && user) navigate(getRedirectPath());
+    if (!authLoading && user && !user.isAnonymous) navigate(getRedirectPath());
   }, [authLoading, user, navigate]);
 
   if (authLoading) {
@@ -30,7 +30,7 @@ const AuthPage = () => {
     );
   }
 
-  if (user) return null;
+  if (user && !user.isAnonymous) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
