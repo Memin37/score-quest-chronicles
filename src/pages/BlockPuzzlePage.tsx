@@ -109,7 +109,7 @@ const BlockPuzzlePage = () => {
           userName: user.name,
           game: 'blockpuzzle',
           difficulty,
-          score: timerRef.current,
+          score: timer,
         }).catch(err => console.error('Block puzzle score save error:', err));
       }
     }
