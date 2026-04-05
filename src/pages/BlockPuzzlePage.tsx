@@ -109,8 +109,8 @@ const BlockPuzzlePage = () => {
           userName: user.name,
           game: 'blockpuzzle',
           difficulty,
-          score: timer,
-        });
+          score: timerRef.current,
+        }).catch(err => console.error('Block puzzle score save error:', err));
       }
     }
   };
