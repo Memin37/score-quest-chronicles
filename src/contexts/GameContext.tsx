@@ -100,6 +100,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const addEntry = async (entry: Omit<LeaderboardEntry, 'weekStart'>) => {
     const weekStart = getWeekStart();
+    console.log('addEntry called:', { ...entry, weekStart });
 
     // Upsert: insert or update if better score
     const { data: existing, error: fetchError } = await supabase
@@ -115,6 +116,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       console.error('Leaderboard fetch error:', fetchError);
     }
 
+    console.log('Existing entry:', existing);
+
     if (existing) {
       if (entry.score < existing.score) {
         const { error: updateError } = await supabase
@@ -122,6 +125,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           .update({ score: entry.score, user_name: entry.userName })
           .eq('id', existing.id);
         if (updateError) console.error('Leaderboard update error:', updateError);
+        else console.log('Score updated successfully');
+      } else {
+        console.log('Existing score is better, skipping update');
       }
     } else {
       const { error: insertError } = await supabase.from('leaderboard_entries').insert({
@@ -133,6 +139,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         week_start: weekStart,
       });
       if (insertError) console.error('Leaderboard insert error:', insertError);
+      else console.log('Score inserted successfully');
     }
 
     await fetchEntries();

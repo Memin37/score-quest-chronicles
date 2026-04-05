@@ -110,7 +110,7 @@ const BlockPuzzlePage = () => {
           game: 'blockpuzzle',
           difficulty,
           score: timer,
-        });
+        }).catch(err => console.error('Block puzzle score save error:', err));
       }
     }
   };
