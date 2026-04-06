@@ -516,7 +516,7 @@ const BlockPuzzlePage = () => {
                 </div>
 
                 <div className="mt-6 p-4 bg-card/50 border border-border rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR — <span className="text-primary/70">Taşımak için basılı tutun</span></p>
+                  <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR — <span className="text-primary/70">Tıkla veya sürükle</span></p>
                   <div className="flex flex-wrap gap-4 justify-center">
                     {pieces.map(piece => {
                       const maxR = Math.max(...piece.cells.map(([r]) => r)) + 1;
