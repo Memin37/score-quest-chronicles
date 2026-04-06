@@ -28,6 +28,14 @@ const games = [
     path: '/blockpuzzle',
     scoreType: 'En İyi Süre',
   },
+  {
+    id: 'maze',
+    name: 'Labirent',
+    description: 'Ok tuşları veya WASD ile labirentten çık!',
+    icon: '🏁',
+    path: '/maze',
+    scoreType: 'En İyi Süre',
+  },
 ];
 
 const Index = () => {
