@@ -33,6 +33,7 @@ const App = () => (
                 <Route path="/sudoku" element={<SudokuPage />} />
                 <Route path="/memory" element={<MemoryPage />} />
                 <Route path="/blockpuzzle" element={<BlockPuzzlePage />} />
+                <Route path="/maze" element={<MazePage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFound />} />
