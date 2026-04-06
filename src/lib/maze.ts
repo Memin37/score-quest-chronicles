@@ -15,9 +15,52 @@ export const difficultyLabels: Record<Difficulty, string> = {
 
 const sizeMap: Record<Difficulty, number> = {
   easy: 8,
-  medium: 14,
-  hard: 20,
+  medium: 11,
+  hard: 15,
 };
+
+/** BFS: find shortest path from start to target, returns list of cells or null */
+export function findPath(grid: Cell[][], start: [number, number], target: [number, number]): [number, number][] | null {
+  const size = grid.length;
+  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  const parent = new Map<string, [number, number] | null>();
+  const queue: [number, number][] = [start];
+  const key = (r: number, c: number) => `${r},${c}`;
+  visited[start[0]][start[1]] = true;
+  parent.set(key(start[0], start[1]), null);
+
+  const dirs: { dir: 'up' | 'down' | 'left' | 'right'; dr: number; dc: number }[] = [
+    { dir: 'up', dr: -1, dc: 0 }, { dir: 'down', dr: 1, dc: 0 },
+    { dir: 'left', dr: 0, dc: -1 }, { dir: 'right', dr: 0, dc: 1 },
+  ];
+
+  while (queue.length > 0) {
+    const [r, c] = queue.shift()!;
+    if (r === target[0] && c === target[1]) {
+      const path: [number, number][] = [];
+      let cur: [number, number] | null = target;
+      while (cur) {
+        path.unshift(cur);
+        cur = parent.get(key(cur[0], cur[1])) ?? null;
+      }
+      return path;
+    }
+    for (const d of dirs) {
+      const nr = r + d.dr, nc = c + d.dc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited[nr][nc] && canMove(grid, r, c, d.dir)) {
+        visited[nr][nc] = true;
+        parent.set(key(nr, nc), [r, c]);
+        queue.push([nr, nc]);
+      }
+    }
+  }
+  return null;
+}
+
+/** Get Manhattan distance between two cells */
+export function cellDistance(a: [number, number], b: [number, number]): number {
+  return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+}
 
 export function getMazeSize(difficulty: Difficulty): number {
   return sizeMap[difficulty];
