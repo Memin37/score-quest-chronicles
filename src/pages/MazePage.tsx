@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
-import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, type Difficulty, type Cell } from '@/lib/maze';
+import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, findPath, cellDistance, type Difficulty, type Cell } from '@/lib/maze';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
-import { Timer, RotateCcw, Trophy, User, LogOut, Play, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
 
 const PENALTY_SECONDS = 5;
+const FOG_RADIUS: Record<Difficulty, number> = { easy: 4, medium: 3, hard: 2 };
 
 interface PenaltyAnim {
   id: number;
@@ -56,58 +57,63 @@ const MazePage = () => {
     return () => clearInterval(id);
   }, [isRunning]);
 
-  // Check win
+  const completeGame = useCallback(() => {
+    setIsComplete(true);
+    setIsRunning(false);
+  }, []);
+
+  // Save score on complete
   useEffect(() => {
-    if (maze && playerPos[0] === goalPos[0] && playerPos[1] === goalPos[1] && gameStarted && !isComplete) {
-      setIsComplete(true);
-      setIsRunning(false);
-      const finalTime = timer + mistakeCount * PENALTY_SECONDS;
-      if (user && !user.isAnonymous) {
-        addEntry({
-          userId: user.id,
-          userName: user.name,
-          game: 'maze',
-          difficulty,
-          score: finalTime,
-        });
-      }
-    }
-  }, [playerPos, goalPos, maze, gameStarted]);
+    if (!isComplete || !user || user.isAnonymous || !maze) return;
+    const finalTime = timer + mistakeCount * PENALTY_SECONDS;
+    addEntry({ userId: user.id, userName: user.name, game: 'maze', difficulty, score: finalTime });
+  }, [isComplete]);
 
   const addPenalty = useCallback(() => {
     setMistakeCount(c => c + 1);
     const id = ++penaltyIdRef.current;
     setPenaltyAnims(prev => [...prev, { id, timestamp: Date.now() }]);
-    setTimeout(() => {
-      setPenaltyAnims(prev => prev.filter(p => p.id !== id));
-    }, 1200);
+    setTimeout(() => setPenaltyAnims(prev => prev.filter(p => p.id !== id)), 1200);
   }, []);
 
   const movePlayer = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
     if (!maze || isComplete) return;
     const [r, c] = playerPos;
     if (canMove(maze, r, c, dir)) {
-      const delta: Record<string, [number, number]> = {
-        up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1],
-      };
+      const delta: Record<string, [number, number]> = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
       const [dr, dc] = delta[dir];
-      setPlayerPos([r + dr, c + dc]);
+      const newPos: [number, number] = [r + dr, c + dc];
+      setPlayerPos(newPos);
+      // Immediate win check
+      if (newPos[0] === goalPos[0] && newPos[1] === goalPos[1]) {
+        completeGame();
+      }
     } else {
       addPenalty();
     }
-  }, [maze, playerPos, isComplete, addPenalty]);
+  }, [maze, playerPos, isComplete, addPenalty, goalPos, completeGame]);
 
-  // Keyboard handler
+  // Click-to-teleport: find path and move there
+  const handleCellClick = useCallback((r: number, c: number) => {
+    if (!maze || isComplete) return;
+    if (r === playerPos[0] && c === playerPos[1]) return;
+    const path = findPath(maze, playerPos, [r, c]);
+    if (path && path.length > 1) {
+      const target = path[path.length - 1] as [number, number];
+      setPlayerPos(target);
+      if (target[0] === goalPos[0] && target[1] === goalPos[1]) {
+        completeGame();
+      }
+    }
+  }, [maze, playerPos, isComplete, goalPos, completeGame]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent | KeyboardEvent) => {
     const keyMap: Record<string, 'up' | 'down' | 'left' | 'right'> = {
       ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
       w: 'up', W: 'up', s: 'down', S: 'down', a: 'left', A: 'left', d: 'right', D: 'right',
     };
     const dir = keyMap[e.key];
-    if (dir) {
-      e.preventDefault();
-      movePlayer(dir);
-    }
+    if (dir) { e.preventDefault(); movePlayer(dir); }
   }, [movePlayer]);
 
   const handleSaveScore = () => {
@@ -118,6 +124,12 @@ const MazePage = () => {
       navigate('/auth');
     }
   };
+
+  // Fog visibility
+  const fogRadius = FOG_RADIUS[difficulty];
+  const isVisible = useCallback((r: number, c: number) => {
+    return cellDistance(playerPos, [r, c]) <= fogRadius;
+  }, [playerPos, fogRadius]);
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
   if (!user) { navigate('/auth'); return null; }
@@ -142,10 +154,9 @@ const MazePage = () => {
 
       <div className="container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-          {/* Difficulty Selection */}
           {!gameStarted && (
             <div className="flex flex-col items-center justify-center py-16 gap-6">
-              <h2 className="font-display text-lg text-foreground">ZORLuK SEVİYESİ SEÇ</h2>
+              <h2 className="font-display text-lg text-foreground">ZORLUK SEVİYESİ SEÇ</h2>
               <div className="flex gap-3">
                 {(['easy', 'medium', 'hard'] as Difficulty[]).map(d => (
                   <button key={d} onClick={() => startNewGame(d)}
@@ -187,17 +198,23 @@ const MazePage = () => {
                 ref={mazeRef}
                 tabIndex={0}
                 onKeyDown={handleKeyDown}
-                className="outline-none relative bg-card border border-border rounded-lg p-2"
+                className="outline-none relative bg-card border border-border rounded-lg p-2 overflow-hidden"
                 style={{ width: cellPx * size + 16, height: cellPx * size + 16 }}
               >
                 {maze.map((row, r) =>
                   row.map((cell, c) => {
                     const isPlayer = r === playerPos[0] && c === playerPos[1];
                     const isGoal = r === goalPos[0] && c === goalPos[1];
+                    const dist = cellDistance(playerPos, [r, c]);
+                    const visible = dist <= fogRadius;
+                    const foggy = dist > fogRadius && dist <= fogRadius + 2;
+                    const hidden = !visible && !foggy;
+
                     return (
                       <div
                         key={`${r}-${c}`}
-                        className="absolute"
+                        className="absolute cursor-pointer transition-opacity duration-300"
+                        onClick={() => handleCellClick(r, c)}
                         style={{
                           left: c * cellPx,
                           top: r * cellPx,
@@ -207,9 +224,11 @@ const MazePage = () => {
                           borderRight: cell.right ? '2px solid hsl(var(--primary))' : 'none',
                           borderBottom: cell.bottom ? '2px solid hsl(var(--primary))' : 'none',
                           borderLeft: cell.left ? '2px solid hsl(var(--primary))' : 'none',
+                          opacity: hidden ? 0 : foggy ? 0.25 : 1,
+                          filter: foggy ? 'blur(2px)' : 'none',
                         }}
                       >
-                        {isGoal && (
+                        {isGoal && visible && (
                           <div className="w-full h-full flex items-center justify-center">
                             <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
                           </div>
@@ -241,7 +260,7 @@ const MazePage = () => {
                     <ArrowRight className="w-6 h-6 text-foreground" />
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Ok tuşları veya WASD ile de oynayabilirsin</p>
+                <p className="text-xs text-muted-foreground mt-1">Hücreye tıklayarak da ışınlanabilirsin</p>
               </div>
 
               {/* Win modal */}
@@ -282,7 +301,6 @@ const MazePage = () => {
           )}
         </div>
 
-        {/* Leaderboard */}
         <div className={`${showLeaderboard ? 'block' : 'hidden'} lg:block w-full lg:w-80`}>
           <LeaderboardPanel game="maze" difficulty={difficulty} />
         </div>
