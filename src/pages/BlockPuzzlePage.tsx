@@ -526,10 +526,16 @@ const BlockPuzzlePage = () => {
                         <div
                           key={piece.id}
                           draggable
-                          onDragStart={(e) => handleDragStart(piece, e)}
+                         onDragStart={(e) => handleDragStart(piece, e)}
                           onDragEnd={handleDragEnd}
                           onTouchStart={() => handleTouchStart(piece)}
-                          className="cursor-grab active:cursor-grabbing p-2 bg-muted/30 border border-border/50 rounded-md hover:border-primary/40 hover:bg-muted/50 transition-all"
+                          onClick={(e) => {
+                            if (!gameStarted || isComplete || isTouchDevice()) return;
+                            e.stopPropagation();
+                            setDraggedPiece(piece);
+                            setFloatingPos({ x: e.clientX, y: e.clientY });
+                          }}
+                          className="cursor-pointer p-2 bg-muted/30 border border-border/50 rounded-md hover:border-primary/40 hover:bg-muted/50 transition-all"
                           style={{ touchAction: 'none' }}
                         >
                           <div
