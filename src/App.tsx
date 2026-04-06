@@ -11,6 +11,7 @@ import AuthPage from "./pages/AuthPage.tsx";
 import SudokuPage from "./pages/SudokuPage.tsx";
 import MemoryPage from "./pages/MemoryPage.tsx";
 import BlockPuzzlePage from "./pages/BlockPuzzlePage.tsx";
+import MazePage from "./pages/MazePage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
