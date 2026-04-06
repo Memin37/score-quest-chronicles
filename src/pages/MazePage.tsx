@@ -211,7 +211,7 @@ const MazePage = () => {
                       >
                         {isGoal && (
                           <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-3/5 h-3/5 rounded-sm bg-green-500 animate-pulse" />
+                            <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
                           </div>
                         )}
                         {isPlayer && (
