@@ -516,7 +516,7 @@ const BlockPuzzlePage = () => {
                 </div>
 
                 <div className="mt-6 p-4 bg-card/50 border border-border rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR — <span className="text-primary/70">Taşımak için basılı tutun</span></p>
+                  <p className="text-xs text-muted-foreground mb-3 font-display">PARÇALAR — <span className="text-primary/70">Tıkla veya sürükle</span></p>
                   <div className="flex flex-wrap gap-4 justify-center">
                     {pieces.map(piece => {
                       const maxR = Math.max(...piece.cells.map(([r]) => r)) + 1;
@@ -526,10 +526,16 @@ const BlockPuzzlePage = () => {
                         <div
                           key={piece.id}
                           draggable
-                          onDragStart={(e) => handleDragStart(piece, e)}
+                         onDragStart={(e) => handleDragStart(piece, e)}
                           onDragEnd={handleDragEnd}
                           onTouchStart={() => handleTouchStart(piece)}
-                          className="cursor-grab active:cursor-grabbing p-2 bg-muted/30 border border-border/50 rounded-md hover:border-primary/40 hover:bg-muted/50 transition-all"
+                          onClick={(e) => {
+                            if (!gameStarted || isComplete || isTouchDevice()) return;
+                            e.stopPropagation();
+                            setDraggedPiece(piece);
+                            setFloatingPos({ x: e.clientX, y: e.clientY });
+                          }}
+                          className="cursor-pointer p-2 bg-muted/30 border border-border/50 rounded-md hover:border-primary/40 hover:bg-muted/50 transition-all"
                           style={{ touchAction: 'none' }}
                         >
                           <div
