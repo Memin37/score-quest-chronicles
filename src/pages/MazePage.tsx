@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
-import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, findPath, cellDistance, type Difficulty, type Cell } from '@/lib/maze';
+import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, findPath, cellDistance, getTeleportTargets, type Difficulty, type Cell } from '@/lib/maze';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
-import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
 
@@ -34,6 +34,30 @@ const MazePage = () => {
   const penaltyIdRef = useRef(0);
   const mazeRef = useRef<HTMLDivElement>(null);
 
+  const [previewReady, setPreviewReady] = useState(false);
+
+  const prepareMaze = useCallback((diff: Difficulty) => {
+    const size = getMazeSize(diff);
+    const m = generateMaze(size);
+    setMaze(m);
+    setPlayerPos([0, 0]);
+    setGoalPos([size - 1, size - 1]);
+    setTimer(0);
+    setIsRunning(false);
+    setIsComplete(false);
+    setGameStarted(false);
+    setPreviewReady(true);
+    setMistakeCount(0);
+    setPenaltyAnims([]);
+    setDifficulty(diff);
+  }, []);
+
+  const handleStartGame = useCallback(() => {
+    setGameStarted(true);
+    setIsRunning(true);
+    setTimeout(() => mazeRef.current?.focus(), 50);
+  }, []);
+
   const startNewGame = useCallback((diff: Difficulty) => {
     const size = getMazeSize(diff);
     const m = generateMaze(size);
@@ -44,6 +68,7 @@ const MazePage = () => {
     setIsRunning(true);
     setIsComplete(false);
     setGameStarted(true);
+    setPreviewReady(false);
     setMistakeCount(0);
     setPenaltyAnims([]);
     setDifficulty(diff);
