@@ -302,6 +302,7 @@ const MazePage = () => {
               </div>
 
               {/* Mobile controls */}
+              {gameStarted && (
               <div className="flex flex-col items-center gap-1 lg:hidden mt-2">
                 <button onClick={() => movePlayer('up')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
                   <ArrowUp className="w-6 h-6 text-foreground" />
@@ -317,8 +318,9 @@ const MazePage = () => {
                     <ArrowRight className="w-6 h-6 text-foreground" />
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Hücreye tıklayarak da ışınlanabilirsin</p>
+                <p className="text-xs text-muted-foreground mt-1">Parlayan noktalara tıklayarak ışınlan</p>
               </div>
+              )}
 
               {/* Win modal */}
               {isComplete && (
@@ -347,7 +349,7 @@ const MazePage = () => {
                       <button onClick={() => startNewGame(difficulty)} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
                         Tekrar Oyna
                       </button>
-                      <button onClick={() => { setGameStarted(false); setMaze(null); }} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
+                      <button onClick={() => { setGameStarted(false); setPreviewReady(false); setMaze(null); }} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
                         Zorluk Değiştir
                       </button>
                     </div>
