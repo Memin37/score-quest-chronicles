@@ -62,6 +62,29 @@ export function cellDistance(a: [number, number], b: [number, number]): number {
   return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
 }
 
+/** Find teleportable points: walk in each open direction from pos until hitting a wall.
+ *  Returns the furthest reachable cell in each direction (excluding current pos). */
+export function getTeleportTargets(grid: Cell[][], pos: [number, number]): [number, number][] {
+  const [r, c] = pos;
+  const targets: [number, number][] = [];
+  const dirs: { dir: 'up' | 'down' | 'left' | 'right'; dr: number; dc: number }[] = [
+    { dir: 'up', dr: -1, dc: 0 }, { dir: 'down', dr: 1, dc: 0 },
+    { dir: 'left', dr: 0, dc: -1 }, { dir: 'right', dr: 0, dc: 1 },
+  ];
+
+  for (const d of dirs) {
+    let cr = r, cc = c;
+    while (canMove(grid, cr, cc, d.dir)) {
+      cr += d.dr;
+      cc += d.dc;
+    }
+    if (cr !== r || cc !== c) {
+      targets.push([cr, cc]);
+    }
+  }
+  return targets;
+}
+
 export function getMazeSize(difficulty: Difficulty): number {
   return sizeMap[difficulty];
 }
