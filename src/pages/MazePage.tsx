@@ -189,12 +189,12 @@ const MazePage = () => {
 
       <div className="container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-          {!gameStarted && (
+          {!previewReady && !gameStarted && (
             <div className="flex flex-col items-center justify-center py-16 gap-6">
               <h2 className="font-display text-lg text-foreground">ZORLUK SEVİYESİ SEÇ</h2>
               <div className="flex gap-3">
                 {(['easy', 'medium', 'hard'] as Difficulty[]).map(d => (
-                  <button key={d} onClick={() => startNewGame(d)}
+                  <button key={d} onClick={() => prepareMaze(d)}
                     className="px-6 py-3 bg-card border border-border rounded-lg text-foreground hover:border-primary hover:neon-box transition-all font-display text-sm">
                     {difficultyLabels[d]}
                   </button>
@@ -203,79 +203,101 @@ const MazePage = () => {
             </div>
           )}
 
-          {gameStarted && maze && (
+          {(previewReady || gameStarted) && maze && (
             <div className="flex flex-col items-center gap-4">
               {/* Controls bar */}
-              <div className="flex items-center gap-4 w-full max-w-lg justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-sm font-mono">
-                    <Timer className="w-4 h-4 text-primary" />
-                    <span className="text-foreground">{formatTime(timer)}</span>
-                  </div>
-                  {mistakeCount > 0 && (
-                    <div className="relative flex items-center gap-1 text-sm">
-                      <AlertTriangle className="w-4 h-4 text-destructive" />
-                      <span className="text-destructive font-mono">+{mistakeCount * PENALTY_SECONDS}s</span>
-                      {penaltyAnims.map(p => (
-                        <span key={p.id} className="absolute -top-4 right-0 text-xs text-destructive font-bold animate-bounce">+{PENALTY_SECONDS}s</span>
-                      ))}
+              {gameStarted && (
+                <div className="flex items-center gap-4 w-full max-w-lg justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 text-sm font-mono">
+                      <Timer className="w-4 h-4 text-primary" />
+                      <span className="text-foreground">{formatTime(timer)}</span>
                     </div>
+                    {mistakeCount > 0 && (
+                      <div className="relative flex items-center gap-1 text-sm">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                        <span className="text-destructive font-mono">+{mistakeCount * PENALTY_SECONDS}s</span>
+                        {penaltyAnims.map(p => (
+                          <span key={p.id} className="absolute -top-4 right-0 text-xs text-destructive font-bold animate-bounce">+{PENALTY_SECONDS}s</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-display">{difficultyLabels[difficulty]}</span>
+                    <button onClick={() => startNewGame(difficulty)} className="p-1.5 text-muted-foreground hover:text-primary"><RotateCcw className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              )}
+
+              {/* Maze grid with blur overlay */}
+              <div className="relative">
+                <div
+                  ref={mazeRef}
+                  tabIndex={0}
+                  onKeyDown={handleKeyDown}
+                  className={`outline-none relative bg-card border border-border rounded-lg p-2 overflow-hidden ${!gameStarted ? 'blur-md pointer-events-none select-none' : ''}`}
+                  style={{ width: cellPx * size + 16, height: cellPx * size + 16 }}
+                >
+                  {maze.map((row, r) =>
+                    row.map((cell, c) => {
+                      const isPlayer = r === playerPos[0] && c === playerPos[1];
+                      const isGoal = r === goalPos[0] && c === goalPos[1];
+                      const isTeleportTarget = gameStarted && teleportSet.has(`${r},${c}`);
+                      const dist = cellDistance(playerPos, [r, c]);
+                      const visible = !gameStarted || dist <= fogRadius;
+                      const foggy = gameStarted && dist > fogRadius && dist <= fogRadius + 2;
+                      const hidden = gameStarted && !visible && !foggy;
+
+                      return (
+                        <div
+                          key={`${r}-${c}`}
+                          className={`absolute transition-opacity duration-300 ${gameStarted && !hidden ? 'cursor-pointer' : ''}`}
+                          onClick={() => handleCellClick(r, c)}
+                          style={{
+                            left: c * cellPx,
+                            top: r * cellPx,
+                            width: cellPx,
+                            height: cellPx,
+                            borderTop: cell.top ? '2px solid hsl(var(--primary))' : 'none',
+                            borderRight: cell.right ? '2px solid hsl(var(--primary))' : 'none',
+                            borderBottom: cell.bottom ? '2px solid hsl(var(--primary))' : 'none',
+                            borderLeft: cell.left ? '2px solid hsl(var(--primary))' : 'none',
+                            opacity: hidden ? 0 : foggy ? 0.25 : 1,
+                            filter: foggy ? 'blur(2px)' : 'none',
+                          }}
+                        >
+                          {isGoal && visible && (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
+                            </div>
+                          )}
+                          {isPlayer && (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <div className="w-3/5 h-3/5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                            </div>
+                          )}
+                          {isTeleportTarget && !isPlayer && visible && !foggy && (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <div className="w-2/5 h-2/5 rounded-full border-2 border-primary/50 bg-primary/15 animate-pulse" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground font-display">{difficultyLabels[difficulty]}</span>
-                  <button onClick={() => startNewGame(difficulty)} className="p-1.5 text-muted-foreground hover:text-primary"><RotateCcw className="w-4 h-4" /></button>
-                </div>
-              </div>
-
-              {/* Maze grid */}
-              <div
-                ref={mazeRef}
-                tabIndex={0}
-                onKeyDown={handleKeyDown}
-                className="outline-none relative bg-card border border-border rounded-lg p-2 overflow-hidden"
-                style={{ width: cellPx * size + 16, height: cellPx * size + 16 }}
-              >
-                {maze.map((row, r) =>
-                  row.map((cell, c) => {
-                    const isPlayer = r === playerPos[0] && c === playerPos[1];
-                    const isGoal = r === goalPos[0] && c === goalPos[1];
-                    const dist = cellDistance(playerPos, [r, c]);
-                    const visible = dist <= fogRadius;
-                    const foggy = dist > fogRadius && dist <= fogRadius + 2;
-                    const hidden = !visible && !foggy;
-
-                    return (
-                      <div
-                        key={`${r}-${c}`}
-                        className="absolute cursor-pointer transition-opacity duration-300"
-                        onClick={() => handleCellClick(r, c)}
-                        style={{
-                          left: c * cellPx,
-                          top: r * cellPx,
-                          width: cellPx,
-                          height: cellPx,
-                          borderTop: cell.top ? '2px solid hsl(var(--primary))' : 'none',
-                          borderRight: cell.right ? '2px solid hsl(var(--primary))' : 'none',
-                          borderBottom: cell.bottom ? '2px solid hsl(var(--primary))' : 'none',
-                          borderLeft: cell.left ? '2px solid hsl(var(--primary))' : 'none',
-                          opacity: hidden ? 0 : foggy ? 0.25 : 1,
-                          filter: foggy ? 'blur(2px)' : 'none',
-                        }}
-                      >
-                        {isGoal && visible && (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
-                          </div>
-                        )}
-                        {isPlayer && (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-3/5 h-3/5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
+                {/* BAŞLA overlay */}
+                {previewReady && !gameStarted && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <button
+                      onClick={handleStartGame}
+                      className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
+                    >
+                      <Play className="w-5 h-5" />
+                      BAŞLA
+                    </button>
+                  </div>
                 )}
               </div>
 
