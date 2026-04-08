@@ -160,11 +160,6 @@ const MazePage = () => {
     }
   };
 
-  // Fog visibility
-  const fogRadius = FOG_RADIUS[difficulty];
-  const isVisible = useCallback((r: number, c: number) => {
-    return cellDistance(playerPos, [r, c]) <= fogRadius;
-  }, [playerPos, fogRadius]);
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
   if (!user) { navigate('/auth'); return null; }
