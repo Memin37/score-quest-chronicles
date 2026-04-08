@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
-import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, findPath, cellDistance, getTeleportTargets, type Difficulty, type Cell } from '@/lib/maze';
+import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, getTeleportTargets, type Difficulty, type Cell } from '@/lib/maze';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
 import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
 
 const PENALTY_SECONDS = 5;
-const FOG_RADIUS: Record<Difficulty, number> = { easy: 4, medium: 3, hard: 2 };
+
 
 interface PenaltyAnim {
   id: number;
