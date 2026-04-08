@@ -62,9 +62,9 @@ export function cellDistance(a: [number, number], b: [number, number]): number {
   return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
 }
 
-/** Find teleportable points: walk in each open direction from pos until hitting a wall.
+/** Find teleportable points: walk in each open direction from pos until hitting a wall or the goal.
  *  Returns the furthest reachable cell in each direction (excluding current pos). */
-export function getTeleportTargets(grid: Cell[][], pos: [number, number]): [number, number][] {
+export function getTeleportTargets(grid: Cell[][], pos: [number, number], goal?: [number, number]): [number, number][] {
   const [r, c] = pos;
   const targets: [number, number][] = [];
   const dirs: { dir: 'up' | 'down' | 'left' | 'right'; dr: number; dc: number }[] = [
@@ -77,6 +77,8 @@ export function getTeleportTargets(grid: Cell[][], pos: [number, number]): [numb
     while (canMove(grid, cr, cc, d.dir)) {
       cr += d.dr;
       cc += d.dc;
+      // Stop at goal
+      if (goal && cr === goal[0] && cc === goal[1]) break;
     }
     if (cr !== r || cc !== c) {
       targets.push([cr, cc]);
