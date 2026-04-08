@@ -118,19 +118,29 @@ const MazePage = () => {
     }
   }, [maze, playerPos, isComplete, addPenalty, goalPos, completeGame]);
 
-  // Click-to-teleport: find path and move there
+  // Teleport targets: intersection/corner points reachable in straight lines
+  const teleportTargets = useMemo(() => {
+    if (!maze || isComplete || !gameStarted) return [];
+    return getTeleportTargets(maze, playerPos);
+  }, [maze, playerPos, isComplete, gameStarted]);
+
+  const teleportSet = useMemo(() => {
+    const s = new Set<string>();
+    teleportTargets.forEach(([r, c]) => s.add(`${r},${c}`));
+    return s;
+  }, [teleportTargets]);
+
+  // Click-to-teleport: only to valid teleport targets
   const handleCellClick = useCallback((r: number, c: number) => {
-    if (!maze || isComplete) return;
+    if (!maze || isComplete || !gameStarted) return;
     if (r === playerPos[0] && c === playerPos[1]) return;
-    const path = findPath(maze, playerPos, [r, c]);
-    if (path && path.length > 1) {
-      const target = path[path.length - 1] as [number, number];
-      setPlayerPos(target);
-      if (target[0] === goalPos[0] && target[1] === goalPos[1]) {
-        completeGame();
-      }
+    if (!teleportSet.has(`${r},${c}`)) return;
+    const newPos: [number, number] = [r, c];
+    setPlayerPos(newPos);
+    if (newPos[0] === goalPos[0] && newPos[1] === goalPos[1]) {
+      completeGame();
     }
-  }, [maze, playerPos, isComplete, goalPos, completeGame]);
+  }, [maze, playerPos, isComplete, gameStarted, goalPos, completeGame, teleportSet]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent | KeyboardEvent) => {
     const keyMap: Record<string, 'up' | 'down' | 'left' | 'right'> = {
