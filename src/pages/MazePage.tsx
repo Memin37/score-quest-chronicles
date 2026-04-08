@@ -121,7 +121,7 @@ const MazePage = () => {
   // Teleport targets: intersection/corner points reachable in straight lines
   const teleportTargets = useMemo(() => {
     if (!maze || isComplete || !gameStarted) return [];
-    return getTeleportTargets(maze, playerPos);
+    return getTeleportTargets(maze, playerPos, goalPos);
   }, [maze, playerPos, isComplete, gameStarted]);
 
   const teleportSet = useMemo(() => {
