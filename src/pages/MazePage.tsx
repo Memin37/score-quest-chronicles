@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
-import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, findPath, cellDistance, getTeleportTargets, type Difficulty, type Cell } from '@/lib/maze';
+import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, getTeleportTargets, type Difficulty, type Cell } from '@/lib/maze';
 import LeaderboardPanel from '@/components/LeaderboardPanel';
 import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
 
 const PENALTY_SECONDS = 5;
-const FOG_RADIUS: Record<Difficulty, number> = { easy: 4, medium: 3, hard: 2 };
+
 
 interface PenaltyAnim {
   id: number;
@@ -160,11 +160,6 @@ const MazePage = () => {
     }
   };
 
-  // Fog visibility
-  const fogRadius = FOG_RADIUS[difficulty];
-  const isVisible = useCallback((r: number, c: number) => {
-    return cellDistance(playerPos, [r, c]) <= fogRadius;
-  }, [playerPos, fogRadius]);
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
   if (!user) { navigate('/auth'); return null; }
@@ -244,15 +239,11 @@ const MazePage = () => {
                       const isPlayer = r === playerPos[0] && c === playerPos[1];
                       const isGoal = r === goalPos[0] && c === goalPos[1];
                       const isTeleportTarget = gameStarted && teleportSet.has(`${r},${c}`);
-                      const dist = cellDistance(playerPos, [r, c]);
-                      const visible = !gameStarted || dist <= fogRadius;
-                      const foggy = gameStarted && dist > fogRadius && dist <= fogRadius + 2;
-                      const hidden = gameStarted && !visible && !foggy;
 
                       return (
                         <div
                           key={`${r}-${c}`}
-                          className={`absolute transition-opacity duration-300 ${gameStarted && !hidden ? 'cursor-pointer' : ''}`}
+                          className={`absolute transition-opacity duration-300 ${gameStarted ? 'cursor-pointer' : ''}`}
                           onClick={() => handleCellClick(r, c)}
                           style={{
                             left: c * cellPx,
@@ -263,11 +254,9 @@ const MazePage = () => {
                             borderRight: cell.right ? '2px solid hsl(var(--primary))' : 'none',
                             borderBottom: cell.bottom ? '2px solid hsl(var(--primary))' : 'none',
                             borderLeft: cell.left ? '2px solid hsl(var(--primary))' : 'none',
-                            opacity: hidden ? 0 : foggy ? 0.25 : 1,
-                            filter: foggy ? 'blur(2px)' : 'none',
                           }}
                         >
-                          {isGoal && visible && (
+                          {isGoal && (
                             <div className="w-full h-full flex items-center justify-center">
                               <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
                             </div>
@@ -277,7 +266,7 @@ const MazePage = () => {
                               <div className="w-3/5 h-3/5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
                             </div>
                           )}
-                          {isTeleportTarget && !isPlayer && visible && !foggy && (
+                          {isTeleportTarget && !isPlayer && (
                             <div className="w-full h-full flex items-center justify-center">
                               <div className="w-2/5 h-2/5 rounded-full border-2 border-primary/50 bg-primary/15 animate-pulse" />
                             </div>
