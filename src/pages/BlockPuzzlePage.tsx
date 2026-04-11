@@ -73,7 +73,7 @@ const BlockPuzzlePage = () => {
 
   useEffect(() => {
     if (!isRunning) return;
-    const interval = setInterval(() => setTimer(t => t + 1), 1000);
+    const interval = setInterval(() => setTimer(t => t + 10), 10);
     return () => clearInterval(interval);
   }, [isRunning]);
 

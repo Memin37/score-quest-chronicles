@@ -7,7 +7,7 @@ import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDo
 import { useNavigate } from 'react-router-dom';
 import { savePendingScore } from '@/lib/pendingScore';
 
-const PENALTY_SECONDS = 5;
+const PENALTY_MS = 500;
 
 
 interface PenaltyAnim {
@@ -78,7 +78,7 @@ const MazePage = () => {
   // Timer
   useEffect(() => {
     if (!isRunning) return;
-    const id = setInterval(() => setTimer(t => t + 1), 1000);
+    const id = setInterval(() => setTimer(t => t + 10), 10);
     return () => clearInterval(id);
   }, [isRunning]);
 
@@ -90,7 +90,7 @@ const MazePage = () => {
   // Save score on complete
   useEffect(() => {
     if (!isComplete || !user || user.isAnonymous || !maze) return;
-    const finalTime = timer + mistakeCount * PENALTY_SECONDS;
+    const finalTime = timer + mistakeCount * PENALTY_MS;
     addEntry({ userId: user.id, userName: user.name, game: 'maze', difficulty, score: finalTime });
   }, [isComplete]);
 
@@ -153,7 +153,7 @@ const MazePage = () => {
 
   const handleSaveScore = () => {
     if (!user) return;
-    const finalTime = timer + mistakeCount * PENALTY_SECONDS;
+    const finalTime = timer + mistakeCount * PENALTY_MS;
     if (user.isAnonymous) {
       savePendingScore({ game: 'maze', difficulty, score: finalTime, returnPath: '/maze' });
       navigate('/auth');
@@ -164,7 +164,7 @@ const MazePage = () => {
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
   if (!user) { navigate('/auth'); return null; }
 
-  const finalTime = timer + mistakeCount * PENALTY_SECONDS;
+  const finalTime = timer + mistakeCount * PENALTY_MS;
   const size = maze ? maze.length : getMazeSize(difficulty);
   const cellPx = Math.min(Math.floor(500 / size), 40);
 
@@ -211,9 +211,9 @@ const MazePage = () => {
                     {mistakeCount > 0 && (
                       <div className="relative flex items-center gap-1 text-sm">
                         <AlertTriangle className="w-4 h-4 text-destructive" />
-                        <span className="text-destructive font-mono">+{mistakeCount * PENALTY_SECONDS}s</span>
+                        <span className="text-destructive font-mono">+{mistakeCount * (PENALTY_MS / 1000)}s</span>
                         {penaltyAnims.map(p => (
-                          <span key={p.id} className="absolute -top-4 right-0 text-xs text-destructive font-bold animate-bounce">+{PENALTY_SECONDS}s</span>
+                          <span key={p.id} className="absolute -top-4 right-0 text-xs text-destructive font-bold animate-bounce">+{PENALTY_MS / 1000}s</span>
                         ))}
                       </div>
                     )}
@@ -321,7 +321,7 @@ const MazePage = () => {
                       <p className="text-xs text-muted-foreground">Toplam Süre</p>
                       <p className="text-2xl font-mono text-foreground">{formatTime(finalTime)}</p>
                       {mistakeCount > 0 && (
-                        <p className="text-xs text-destructive mt-1">({mistakeCount} ceza × {PENALTY_SECONDS}s = +{mistakeCount * PENALTY_SECONDS}s)</p>
+                        <p className="text-xs text-destructive mt-1">({mistakeCount} ceza × {PENALTY_MS / 1000}s = +{mistakeCount * (PENALTY_MS / 1000)}s)</p>
                       )}
                     </div>
                     {user.isAnonymous ? (

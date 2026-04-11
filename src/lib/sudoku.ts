@@ -104,8 +104,10 @@ export function checkComplete(board: Board): boolean {
   return true;
 }
 
-export function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+export function formatTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  const fractionalStr = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${fractionalStr}`;
 }

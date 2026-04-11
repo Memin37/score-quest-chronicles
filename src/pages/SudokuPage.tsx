@@ -18,7 +18,7 @@ const difficultyLabels: Record<Difficulty, string> = {
   hard: 'Zor',
 };
 
-const PENALTY_SECONDS = 5;
+const PENALTY_MS = 500;
 
 interface PenaltyAnim {
   id: number;
@@ -69,7 +69,7 @@ const SudokuPage = () => {
 
   useEffect(() => {
     if (!isRunning) return;
-    const interval = setInterval(() => setTimer(t => t + 1), 1000);
+    const interval = setInterval(() => setTimer(t => t + 10), 10);
     return () => clearInterval(interval);
   }, [isRunning]);
 
@@ -183,7 +183,7 @@ const SudokuPage = () => {
     // Check if the placed number is wrong compared to solution
     if (solution[r] && solution[r][c] !== num) {
       setMistakeCount(prev => prev + 1);
-      setTimer(prev => prev + PENALTY_SECONDS);
+      setTimer(prev => prev + PENALTY_MS);
       setPenaltyAnims(prev => [...prev, { id: Date.now(), timestamp: Date.now() }]);
     }
 
@@ -196,7 +196,7 @@ const SudokuPage = () => {
           userName: user.name,
           game: 'sudoku',
           difficulty,
-          score: timer + (solution[r] && solution[r][c] !== num ? PENALTY_SECONDS : 0),
+          score: timer + (solution[r] && solution[r][c] !== num ? PENALTY_MS : 0),
         });
       }
     }
@@ -305,7 +305,7 @@ const SudokuPage = () => {
                     key={anim.id}
                     className="absolute -top-1 -right-2 font-mono text-sm font-bold text-destructive pointer-events-none animate-penalty-float"
                   >
-                    +{PENALTY_SECONDS}s
+                    +{PENALTY_MS / 1000}s
                   </span>
                 ))}
               </div>
@@ -334,7 +334,7 @@ const SudokuPage = () => {
                 {mistakeCount > 0 && (
                   <p className="text-sm mt-1 text-destructive">
                     <AlertTriangle className="w-3.5 h-3.5 inline mr-1" />
-                    {mistakeCount} hata yaptınız (+{mistakeCount * PENALTY_SECONDS}s ceza)
+                    {mistakeCount} hata yaptınız (+{mistakeCount * (PENALTY_MS / 1000)}s ceza)
                   </p>
                 )}
                 {mistakeCount === 0 && (
