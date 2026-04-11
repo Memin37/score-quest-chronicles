@@ -257,17 +257,17 @@ const MazePage = () => {
                           }}
                         >
                           {isGoal && (
-                            <div className="w-full h-full flex items-center justify-center">
+                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                               <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
                             </div>
                           )}
                           {isPlayer && (
-                            <div className="w-full h-full flex items-center justify-center">
+                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                               <div className="w-3/5 h-3/5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
                             </div>
                           )}
                           {isTeleportTarget && !isPlayer && (
-                            <div className="w-full h-full flex items-center justify-center">
+                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                               <div className="w-2/5 h-2/5 rounded-full border-2 border-primary/50 bg-primary/15 animate-pulse" />
                             </div>
                           )}
