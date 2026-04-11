@@ -119,7 +119,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     console.log('Existing entry:', existing);
 
     if (existing) {
-      if (entry.score < existing.score) {
+      // If the existing score is unnaturally small (< 1000), it's likely an old score in seconds. Overwrite it.
+      const isOldSecondsScore = existing.score < 1000;
+      if (entry.score < existing.score || isOldSecondsScore) {
         const { error: updateError } = await supabase
           .from('leaderboard_entries')
           .update({ score: entry.score, user_name: entry.userName })
