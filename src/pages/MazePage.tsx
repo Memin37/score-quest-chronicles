@@ -102,7 +102,7 @@ const MazePage = () => {
   }, []);
 
   const movePlayer = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
-    if (!maze || isComplete) return;
+    if (!maze || isComplete || !gameStarted) return;
     const [r, c] = playerPos;
     if (canMove(maze, r, c, dir)) {
       const delta: Record<string, [number, number]> = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
@@ -116,7 +116,7 @@ const MazePage = () => {
     } else {
       addPenalty();
     }
-  }, [maze, playerPos, isComplete, addPenalty, goalPos, completeGame]);
+  }, [maze, playerPos, isComplete, gameStarted, addPenalty, goalPos, completeGame]);
 
   // Teleport targets: intersection/corner points reachable in straight lines
   const teleportTargets = useMemo(() => {
