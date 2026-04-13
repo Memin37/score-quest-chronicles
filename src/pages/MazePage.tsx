@@ -182,9 +182,9 @@ const MazePage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
-          <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
+      <div className="w-full px-4 py-6">
+        <div className="flex justify-center gap-6">
+          <div className="flex-1 max-w-2xl">
             {/* Standardized Difficulty Selector */}
             <div className="flex items-center gap-2 mb-6 flex-wrap">
               {(Object.keys(difficultyLabels) as Difficulty[]).map(d => (
@@ -202,7 +202,7 @@ const MazePage = () => {
             </div>
 
             {/* Standardized Controls Bar (Timer + Penalties + Refresh) */}
-            <div className="flex items-center gap-4 justify-center sm:justify-start w-full mb-2">
+            <div className="flex items-center gap-4 mb-4 flex-wrap">
               <div className="relative flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
                 <Timer className="w-4 h-4 text-primary" />
                 <span className="font-mono text-lg text-foreground font-bold">
@@ -218,10 +218,10 @@ const MazePage = () => {
                 ))}
               </div>
               {gameStarted && mistakeCount > 0 && (
-                <div className="flex items-center gap-1.5 text-sm text-destructive">
+                <div className="flex items-center gap-1.5 text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md border border-destructive/20">
                   <AlertTriangle className="w-4 h-4" />
                   <span className="font-mono font-bold">{mistakeCount}</span>
-                  <span className="text-muted-foreground text-xs hidden sm:inline">hata</span>
+                  <span className="text-destructive/80 text-xs hidden sm:inline">hata</span>
                 </div>
               )}
               <button
@@ -358,10 +358,23 @@ const MazePage = () => {
 
             )}
           </div>
-        </div>
 
-        <div className={`${showLeaderboard ? 'block' : 'hidden'} lg:block w-full lg:w-80`}>
-          <LeaderboardPanel game="maze" difficulty={difficulty} />
+          {/* Right side: Leaderboard */}
+          <div className="hidden lg:flex flex-col w-80 shrink-0 gap-6">
+            <LeaderboardPanel game="maze" difficulty={difficulty} />
+          </div>
+
+          {showLeaderboard && (
+            <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
+              <div className="max-w-md mx-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-display text-sm text-accent">SKOR TABLOSU</h2>
+                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
+                </div>
+                <LeaderboardPanel game="maze" difficulty={difficulty} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
