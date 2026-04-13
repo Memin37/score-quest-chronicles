@@ -41,21 +41,19 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
       <div className="flex gap-1 mb-3 bg-muted/30 rounded-md p-0.5">
         <button
           onClick={() => setTab('weekly')}
-          className={`flex-1 text-xs py-1.5 rounded transition-all font-medium ${
-            tab === 'weekly'
-              ? 'bg-accent/20 text-accent border border-accent/30'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
+          className={`flex-1 text-xs py-1.5 rounded transition-all font-medium ${tab === 'weekly'
+            ? 'bg-accent/20 text-accent border border-accent/30'
+            : 'text-muted-foreground hover:text-foreground'
+            }`}
         >
           Bu Hafta
         </button>
         <button
           onClick={() => setTab('alltime')}
-          className={`flex-1 text-xs py-1.5 rounded transition-all font-medium ${
-            tab === 'alltime'
-              ? 'bg-accent/20 text-accent border border-accent/30'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
+          className={`flex-1 text-xs py-1.5 rounded transition-all font-medium ${tab === 'alltime'
+            ? 'bg-accent/20 text-accent border border-accent/30'
+            : 'text-muted-foreground hover:text-foreground'
+            }`}
         >
           Tüm Zamanlar
         </button>
@@ -72,20 +70,18 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
           {entries.slice(0, 10).map((entry, i) => (
             <div
               key={`${entry.userId}-${i}`}
-              className={`flex items-center justify-between py-2 px-3 rounded-md text-sm ${
-                i === 0
-                  ? 'bg-accent/10 border border-accent/30 neon-gold'
-                  : i === 1
-                    ? 'bg-muted/60 border border-border'
-                    : i === 2
-                      ? 'bg-secondary/10 border border-secondary/30'
-                      : 'bg-muted/30'
-              }`}
+              className={`flex items-center justify-between py-2 px-3 rounded-md text-sm ${i === 0
+                ? 'bg-accent/10 border border-accent/30 neon-gold'
+                : i === 1
+                  ? 'bg-muted/60 border border-border'
+                  : i === 2
+                    ? 'bg-secondary/10 border border-secondary/30'
+                    : 'bg-muted/30'
+                }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`font-mono font-bold w-6 text-center ${
-                  i === 0 ? 'text-accent' : i === 1 ? 'text-foreground' : i === 2 ? 'text-secondary' : 'text-muted-foreground'
-                }`}>
+                <span className={`font-mono font-bold w-6 text-center ${i === 0 ? 'text-accent' : i === 1 ? 'text-foreground' : i === 2 ? 'text-secondary' : 'text-muted-foreground'
+                  }`}>
                   {i + 1}
                 </span>
                 <span className="text-foreground font-medium truncate max-w-[120px]">
