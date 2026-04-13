@@ -65,10 +65,10 @@ const MazePage = () => {
     setPlayerPos([0, 0]);
     setGoalPos([size - 1, size - 1]);
     setTimer(0);
-    setIsRunning(true);
+    setIsRunning(false);
     setIsComplete(false);
-    setGameStarted(true);
-    setPreviewReady(false);
+    setGameStarted(false);
+    setPreviewReady(true);
     setMistakeCount(0);
     setPenaltyAnims([]);
     setDifficulty(diff);
@@ -184,169 +184,180 @@ const MazePage = () => {
 
       <div className="container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-          {!previewReady && !gameStarted && (
-            <div className="flex flex-col items-center justify-center py-16 gap-6">
-              <h2 className="font-display text-lg text-foreground">ZORLUK SEVİYESİ SEÇ</h2>
-              <div className="flex gap-3">
-                {(['easy', 'medium', 'hard'] as Difficulty[]).map(d => (
-                  <button key={d} onClick={() => prepareMaze(d)}
-                    className="px-6 py-3 bg-card border border-border rounded-lg text-foreground hover:border-primary hover:neon-box transition-all font-display text-sm">
-                    {difficultyLabels[d]}
-                  </button>
+          <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
+            {/* Standardized Difficulty Selector */}
+            <div className="flex items-center gap-2 mb-6 flex-wrap">
+              {(Object.keys(difficultyLabels) as Difficulty[]).map(d => (
+                <button
+                  key={d}
+                  onClick={() => prepareMaze(d)}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${difficulty === d
+                    ? 'bg-primary text-primary-foreground neon-box'
+                    : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                    }`}
+                >
+                  {difficultyLabels[d]}
+                </button>
+              ))}
+            </div>
+
+            {/* Standardized Controls Bar (Timer + Penalties + Refresh) */}
+            <div className="flex items-center gap-4 justify-center sm:justify-start w-full mb-2">
+              <div className="relative flex items-center gap-2 bg-muted px-4 py-2 rounded-md border border-border">
+                <Timer className="w-4 h-4 text-primary" />
+                <span className="font-mono text-lg text-foreground font-bold">
+                  {formatTime(timer)}
+                </span>
+                {penaltyAnims.map(p => (
+                  <span
+                    key={p.id}
+                    className="absolute -top-1 -right-2 font-mono text-sm font-bold text-destructive pointer-events-none animate-penalty-float"
+                  >
+                    +{PENALTY_MS / 1000}s
+                  </span>
                 ))}
               </div>
-            </div>
-          )}
-
-          {(previewReady || gameStarted) && maze && (
-            <div className="flex flex-col items-center gap-4">
-              {/* Controls bar */}
-              {gameStarted && (
-                <div className="flex items-center gap-4 w-full max-w-lg justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-sm font-mono">
-                      <Timer className="w-4 h-4 text-primary" />
-                      <span className="text-foreground">{formatTime(timer)}</span>
-                    </div>
-                    {mistakeCount > 0 && (
-                      <div className="relative flex items-center gap-1 text-sm">
-                        <AlertTriangle className="w-4 h-4 text-destructive" />
-                        <span className="text-destructive font-mono">+{mistakeCount * (PENALTY_MS / 1000)}s</span>
-                        {penaltyAnims.map(p => (
-                          <span key={p.id} className="absolute -top-4 right-0 text-xs text-destructive font-bold animate-bounce">+{PENALTY_MS / 1000}s</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground font-display">{difficultyLabels[difficulty]}</span>
-                    <button onClick={() => startNewGame(difficulty)} className="p-1.5 text-muted-foreground hover:text-primary"><RotateCcw className="w-4 h-4" /></button>
-                  </div>
+              {gameStarted && mistakeCount > 0 && (
+                <div className="flex items-center gap-1.5 text-sm text-destructive">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="font-mono font-bold">{mistakeCount}</span>
+                  <span className="text-muted-foreground text-xs hidden sm:inline">hata</span>
                 </div>
               )}
+              <button
+                onClick={() => prepareMaze(difficulty)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition-all text-sm ml-auto sm:ml-0"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Yeni Oyun
+              </button>
+            </div>
 
-              {/* Maze grid with blur overlay */}
-              <div className="relative">
-                <div
-                  ref={mazeRef}
-                  tabIndex={0}
-                  onKeyDown={handleKeyDown}
-                  className={`outline-none relative bg-card border border-border rounded-lg p-2 overflow-hidden ${!gameStarted ? 'blur-md pointer-events-none select-none' : ''}`}
-                  style={{ width: cellPx * size + 16, height: cellPx * size + 16 }}
-                >
-                  {maze.map((row, r) =>
-                    row.map((cell, c) => {
-                      const isPlayer = r === playerPos[0] && c === playerPos[1];
-                      const isGoal = r === goalPos[0] && c === goalPos[1];
-                      const isTeleportTarget = gameStarted && teleportSet.has(`${r},${c}`);
+            {(previewReady || gameStarted) && maze && (
+              <>
+                <div className="relative w-full flex justify-center">
+                  <div
+                    ref={mazeRef}
+                    tabIndex={0}
+                    onKeyDown={handleKeyDown}
+                    className={`outline-none relative bg-card border border-border rounded-lg p-2 overflow-hidden ${!gameStarted ? 'blur-md pointer-events-none select-none' : ''}`}
+                    style={{ width: cellPx * size + 16, height: cellPx * size + 16 }}
+                  >
+                    {maze.map((row, r) =>
+                      row.map((cell, c) => {
+                        const isPlayer = r === playerPos[0] && c === playerPos[1];
+                        const isGoal = r === goalPos[0] && c === goalPos[1];
+                        const isTeleportTarget = gameStarted && teleportSet.has(`${r},${c}`);
 
-                      return (
-                        <div
-                          key={`${r}-${c}`}
-                          className={`absolute transition-opacity duration-300 ${gameStarted ? 'cursor-pointer' : ''}`}
-                          onClick={() => handleCellClick(r, c)}
-                          style={{
-                            left: c * cellPx,
-                            top: r * cellPx,
-                            width: cellPx,
-                            height: cellPx,
-                            borderTop: cell.top ? '2px solid hsl(var(--primary))' : 'none',
-                            borderRight: cell.right ? '2px solid hsl(var(--primary))' : 'none',
-                            borderBottom: cell.bottom ? '2px solid hsl(var(--primary))' : 'none',
-                            borderLeft: cell.left ? '2px solid hsl(var(--primary))' : 'none',
-                          }}
-                        >
-                          {isGoal && (
-                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                              <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
-                            </div>
-                          )}
-                          {isPlayer && (
-                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                              <div className="w-3/5 h-3/5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                            </div>
-                          )}
-                          {isTeleportTarget && !isPlayer && (
-                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                              <div className="w-2/5 h-2/5 rounded-full border-2 border-primary/50 bg-primary/15 animate-pulse" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
+                        return (
+                          <div
+                            key={`${r}-${c}`}
+                            className={`absolute transition-opacity duration-300 ${gameStarted ? 'cursor-pointer' : ''}`}
+                            onClick={() => handleCellClick(r, c)}
+                            style={{
+                              left: c * cellPx,
+                              top: r * cellPx,
+                              width: cellPx,
+                              height: cellPx,
+                              borderTop: cell.top ? '2px solid hsl(var(--primary))' : 'none',
+                              borderRight: cell.right ? '2px solid hsl(var(--primary))' : 'none',
+                              borderBottom: cell.bottom ? '2px solid hsl(var(--primary))' : 'none',
+                              borderLeft: cell.left ? '2px solid hsl(var(--primary))' : 'none',
+                            }}
+                          >
+                            {isGoal && (
+                              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                                <div className="w-3/5 h-3/5 rounded-sm bg-accent animate-pulse" />
+                              </div>
+                            )}
+                            {isPlayer && (
+                              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                                <div className="w-3/5 h-3/5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                              </div>
+                            )}
+                            {isTeleportTarget && !isPlayer && (
+                              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                                <div className="w-2/5 h-2/5 rounded-full border-2 border-primary/50 bg-primary/15 animate-pulse" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                  {/* BAŞLA overlay */}
+                  {previewReady && !gameStarted && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <button
+                        onClick={handleStartGame}
+                        className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
+                      >
+                        <Play className="w-5 h-5" />
+                        BAŞLA
+                      </button>
+                    </div>
                   )}
                 </div>
-                {/* BAŞLA overlay */}
-                {previewReady && !gameStarted && (
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <button
-                      onClick={handleStartGame}
-                      className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
-                    >
-                      <Play className="w-5 h-5" />
-                      BAŞLA
+
+                {/* Mobile controls */}
+                {gameStarted && (
+                  <div className="flex flex-col items-center gap-1 lg:hidden mt-2">
+                    <button onClick={() => movePlayer('up')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
+                      <ArrowUp className="w-6 h-6 text-foreground" />
                     </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => movePlayer('left')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
+                        <ArrowLeft className="w-6 h-6 text-foreground" />
+                      </button>
+                      <button onClick={() => movePlayer('down')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
+                        <ArrowDown className="w-6 h-6 text-foreground" />
+                      </button>
+                      <button onClick={() => movePlayer('right')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
+                        <ArrowRight className="w-6 h-6 text-foreground" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Parlayan noktalara tıklayarak ışınlan</p>
                   </div>
                 )}
-              </div>
 
-              {/* Mobile controls */}
-              {gameStarted && (
-              <div className="flex flex-col items-center gap-1 lg:hidden mt-2">
-                <button onClick={() => movePlayer('up')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
-                  <ArrowUp className="w-6 h-6 text-foreground" />
-                </button>
-                <div className="flex gap-1">
-                  <button onClick={() => movePlayer('left')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
-                    <ArrowLeft className="w-6 h-6 text-foreground" />
-                  </button>
-                  <button onClick={() => movePlayer('down')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
-                    <ArrowDown className="w-6 h-6 text-foreground" />
-                  </button>
-                  <button onClick={() => movePlayer('right')} className="p-3 bg-card border border-border rounded-lg hover:border-primary active:bg-primary/20">
-                    <ArrowRight className="w-6 h-6 text-foreground" />
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Parlayan noktalara tıklayarak ışınlan</p>
-              </div>
-              )}
-
-              {/* Win modal */}
-              {isComplete && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                  <div className="bg-card border border-primary/50 rounded-xl p-8 max-w-sm w-full mx-4 text-center neon-box">
-                    <h3 className="font-display text-lg text-primary neon-text mb-2">TEBRİKLER!</h3>
-                    <p className="text-muted-foreground text-sm mb-4">Labirenti tamamladın!</p>
-                    <div className="bg-muted rounded-lg p-4 mb-4">
-                      <p className="text-xs text-muted-foreground">Toplam Süre</p>
-                      <p className="text-2xl font-mono text-foreground">{formatTime(finalTime)}</p>
-                      {mistakeCount > 0 && (
-                        <p className="text-xs text-destructive mt-1">({mistakeCount} ceza × {PENALTY_MS / 1000}s = +{mistakeCount * (PENALTY_MS / 1000)}s)</p>
+                {/* Win modal */}
+                {isComplete && (
+                  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-card border border-primary/50 rounded-xl p-8 max-w-sm w-full mx-4 text-center neon-box">
+                      <h3 className="font-display text-lg text-primary neon-text mb-2">TEBRİKLER!</h3>
+                      <p className="text-muted-foreground text-sm mb-4">Labirenti tamamladın!</p>
+                      <div className="bg-muted rounded-lg p-4 mb-4">
+                        <p className="text-xs text-muted-foreground">Toplam Süre</p>
+                        <p className="text-2xl font-mono text-foreground">{formatTime(finalTime)}</p>
+                        {mistakeCount > 0 && (
+                          <p className="text-xs text-destructive mt-1">({mistakeCount} ceza × {PENALTY_MS / 1000}s = +{mistakeCount * (PENALTY_MS / 1000)}s)</p>
+                        )}
+                      </div>
+                      {user.isAnonymous ? (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">Skorunu kaydetmek için giriş yap!</p>
+                          <button onClick={handleSaveScore} className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-sm hover:bg-primary/90">
+                            Giriş Yap & Kaydet
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-accent">✓ Skorun kaydedildi!</p>
                       )}
-                    </div>
-                    {user.isAnonymous ? (
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground">Skorunu kaydetmek için giriş yap!</p>
-                        <button onClick={handleSaveScore} className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-sm hover:bg-primary/90">
-                          Giriş Yap & Kaydet
+                      <div className="flex gap-2 mt-4">
+                        <button onClick={() => startNewGame(difficulty)} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
+                          Tekrar Oyna
+                        </button>
+                        <button onClick={() => { setGameStarted(false); setPreviewReady(false); setMaze(null); }} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
+                          Zorluk Değiştir
                         </button>
                       </div>
-                    ) : (
-                      <p className="text-xs text-accent">✓ Skorun kaydedildi!</p>
-                    )}
-                    <div className="flex gap-2 mt-4">
-                      <button onClick={() => startNewGame(difficulty)} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
-                        Tekrar Oyna
-                      </button>
-                      <button onClick={() => { setGameStarted(false); setPreviewReady(false); setMaze(null); }} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
-                        Zorluk Değiştir
-                      </button>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </>
+
+            )}
+          </div>
         </div>
 
         <div className={`${showLeaderboard ? 'block' : 'hidden'} lg:block w-full lg:w-80`}>
