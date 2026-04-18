@@ -78,6 +78,11 @@ const MazePage = () => {
     setTimeout(() => mazeRef.current?.focus(), 50);
   }, []);
 
+  // Initialize maze on mount
+  useEffect(() => {
+    prepareMaze('easy');
+  }, [prepareMaze]);
+
   // Timer
   useEffect(() => {
     if (!isRunning) return;
