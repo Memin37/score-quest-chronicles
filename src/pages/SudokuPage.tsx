@@ -8,6 +8,8 @@ import LeaderboardPanel from '@/components/LeaderboardPanel';
 import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 import { savePendingScore } from '@/lib/pendingScore';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -29,6 +31,7 @@ const SudokuPage = () => {
   const { user, loading, logout } = useAuth();
   const { addEntry } = useGame();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [puzzle, setPuzzle] = useState<(number | null)[][]>([]);
@@ -234,7 +237,7 @@ const SudokuPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">{t('loading')}</p></div>;
   if (!user) return null;
 
   return (
@@ -242,9 +245,10 @@ const SudokuPage = () => {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="font-display text-lg text-primary neon-text cursor-pointer" onClick={() => navigate('/')}>
-            ARENA
+            {t('arena')}
           </h1>
           <div className="flex items-center gap-3">
+            <LanguageSelector />
             <button
               onClick={() => setShowLeaderboard(!showLeaderboard)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border border-accent/30 rounded-md text-accent text-sm hover:bg-accent/20 transition-all sm:hidden"
@@ -261,7 +265,7 @@ const SudokuPage = () => {
             <button
               onClick={async () => { await logout(); navigate('/auth'); }}
               className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
-              title="Çıkış"
+              title={t('logout')}
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -289,7 +293,7 @@ const SudokuPage = () => {
                       : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                   }`}
                 >
-                  {difficultyLabels[d]}
+                  {t(d)}
                 </button>
               ))}
             </div>
@@ -313,7 +317,7 @@ const SudokuPage = () => {
                 <div className="flex items-center gap-1.5 text-sm text-destructive">
                   <AlertTriangle className="w-4 h-4" />
                   <span className="font-mono font-bold">{mistakeCount}</span>
-                  <span className="text-muted-foreground text-xs">hata</span>
+                  <span className="text-muted-foreground text-xs">{t('mistakes')}</span>
                 </div>
               )}
               <button
@@ -321,24 +325,24 @@ const SudokuPage = () => {
                 className="flex items-center gap-1.5 px-3 py-2 bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition-all text-sm"
               >
                 <RotateCcw className="w-4 h-4" />
-                Yeni Oyun
+                {t('newGame')}
               </button>
             </div>
 
             {isComplete && (
               <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg neon-box">
-                <p className="font-display text-xs text-primary neon-text">TEBRİKLER! 🎉</p>
+                <p className="font-display text-xs text-primary neon-text">{t('congrats')}</p>
                 <p className="text-foreground text-sm mt-1">
-                  Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
+                  {t('time')}: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
                 </p>
                 {mistakeCount > 0 && (
                   <p className="text-sm mt-1 text-destructive">
                     <AlertTriangle className="w-3.5 h-3.5 inline mr-1" />
-                    {mistakeCount} hata yaptınız (+{mistakeCount * (PENALTY_MS / 1000)}s ceza)
+                    {mistakeCount} {t('mistakes')} (+{mistakeCount * (PENALTY_MS / 1000)}s {t('penalty')})
                   </p>
                 )}
                 {mistakeCount === 0 && (
-                  <p className="text-sm mt-1 text-accent">✨ Mükemmel! Hiç hata yapmadınız!</p>
+                  <p className="text-sm mt-1 text-accent">{t('perfect')}</p>
                 )}
                 {user?.isAnonymous && (
                   <button
@@ -348,7 +352,7 @@ const SudokuPage = () => {
                     }}
                     className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
                   >
-                    Skorunuzu kaydetmek için giriş yapın →
+                    {t('saveScoreToLogin')}
                   </button>
                 )}
               </div>
@@ -375,7 +379,7 @@ const SudokuPage = () => {
                         className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
                       >
                         <Play className="w-5 h-5" />
-                        BAŞLA
+                        {t('start')}
                       </button>
                     </div>
                   )}
@@ -403,8 +407,8 @@ const SudokuPage = () => {
             <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
               <div className="max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-display text-sm text-accent">SKOR TABLOSU</h2>
-                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
+                  <h2 className="font-display text-sm text-accent">{t('leaderboardTitle')}</h2>
+                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">{t('close')}</button>
                 </div>
                 <LeaderboardPanel game="sudoku" difficulty={difficulty} />
               </div>

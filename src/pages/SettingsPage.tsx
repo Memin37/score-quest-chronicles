@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Palette, Eye } from 'lucide-react';
 import { useTheme, presets, ThemeColors } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 // Convert HSL string "H S% L%" to hex for input[type=color]
 function hslStringToHex(hsl: string): string {
@@ -55,17 +57,21 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { currentPresetId, colors, setPreset, setCustomColor, isCustom, labels } = useTheme();
   const [showPreview, setShowPreview] = useState(true);
+  const { t } = useLanguage();
 
   const colorKeys = Object.keys(labels) as (keyof ThemeColors)[];
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="font-display text-sm text-primary neon-text">AYARLAR</h1>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="font-display text-sm text-primary neon-text">{t('settingsTitle')}</h1>
+          </div>
+          <LanguageSelector />
         </div>
       </header>
 
@@ -74,7 +80,7 @@ const SettingsPage = () => {
         <section className="bg-card border border-border rounded-lg p-6 neon-box">
           <div className="flex items-center gap-2 mb-4">
             <Palette className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-xs text-foreground">RENK PALETLERİ</h2>
+            <h2 className="font-display text-xs text-foreground uppercase">{t('colorPalettes')}</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {presets.map(preset => {
@@ -119,8 +125,8 @@ const SettingsPage = () => {
                 </div>
               )}
               <span className="text-2xl">🎨</span>
-              <p className="text-xs font-semibold text-foreground mt-2">Özel</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Aşağıdan düzenle</p>
+              <p className="text-xs font-semibold text-foreground mt-2">{t('customColor')}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{t('editBelow')}</p>
             </button>
           </div>
         </section>
@@ -128,13 +134,13 @@ const SettingsPage = () => {
         {/* Custom Color Picker */}
         <section className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xs text-foreground">RENK DÜZENLEYİCİ</h2>
+            <h2 className="font-display text-xs text-foreground uppercase">{t('colorEditor')}</h2>
             <button
               onClick={() => setShowPreview(v => !v)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <Eye className="w-4 h-4" />
-              {showPreview ? 'Önizlemeyi Gizle' : 'Önizlemeyi Göster'}
+              {showPreview ? t('hidePreview') : t('showPreview')}
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -147,7 +153,7 @@ const SettingsPage = () => {
                   className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">{labels[key]}</p>
+                  <p className="text-xs font-semibold text-foreground truncate">{t(`area${key.charAt(0).toUpperCase() + key.slice(1)}`)}</p>
                   <p className="text-[10px] text-muted-foreground font-mono truncate">
                     hsl({colors[key]})
                   </p>
@@ -160,7 +166,7 @@ const SettingsPage = () => {
         {/* Live Preview */}
         {showPreview && (
           <section className="bg-card border border-border rounded-lg p-6">
-            <h2 className="font-display text-xs text-foreground mb-4">ÖNİZLEME</h2>
+            <h2 className="font-display text-xs text-foreground mb-4 uppercase">{t('previewTitle')}</h2>
             {/* Mini preview of the theme */}
             <div
               className="rounded-lg border overflow-hidden"
@@ -171,37 +177,37 @@ const SettingsPage = () => {
                 className="px-4 py-3 flex items-center justify-between"
                 style={{ backgroundColor: `hsl(${colors.card})`, borderBottom: `1px solid hsl(${colors.border})` }}
               >
-                <span className="font-display text-xs" style={{ color: `hsl(${colors.primary})` }}>ARENA</span>
-                <span className="text-xs" style={{ color: `hsl(${colors.foreground})` }}>Kullanıcı</span>
+                <span className="font-display text-xs uppercase" style={{ color: `hsl(${colors.primary})` }}>{t('previewHeader')}</span>
+                <span className="text-xs" style={{ color: `hsl(${colors.foreground})` }}>{t('previewUser')}</span>
               </div>
               {/* Body */}
               <div className="p-4 space-y-3">
-                <p className="text-sm font-bold" style={{ color: `hsl(${colors.foreground})` }}>Başlık Metni</p>
-                <p className="text-xs" style={{ color: `hsl(${colors.mutedForeground})` }}>Açıklama metni burada görünür</p>
+                <p className="text-sm font-bold" style={{ color: `hsl(${colors.foreground})` }}>{t('previewTitleText')}</p>
+                <p className="text-xs" style={{ color: `hsl(${colors.mutedForeground})` }}>{t('previewDesc')}</p>
                 <div className="flex gap-2 flex-wrap">
                   <button
                     className="px-3 py-1.5 rounded-md text-xs font-semibold"
                     style={{ backgroundColor: `hsl(${colors.primary})`, color: `hsl(${colors.primaryForeground})` }}
                   >
-                    Ana Buton
+                    {t('previewBtnMain')}
                   </button>
                   <button
                     className="px-3 py-1.5 rounded-md text-xs font-semibold"
                     style={{ backgroundColor: `hsl(${colors.secondary})`, color: `hsl(${colors.secondaryForeground})` }}
                   >
-                    İkincil
+                    {t('previewBtnSec')}
                   </button>
                   <span
                     className="px-2 py-1 rounded text-[10px] font-bold"
                     style={{ backgroundColor: `hsl(${colors.accent})`, color: `hsl(${colors.accentForeground})` }}
                   >
-                    Vurgu
+                    {t('previewAccent')}
                   </span>
                   <span
                     className="px-2 py-1 rounded text-[10px] font-bold"
                     style={{ backgroundColor: `hsl(${colors.destructive})`, color: '#fff' }}
                   >
-                    Tehlike
+                    {t('previewDanger')}
                   </span>
                 </div>
                 {/* Card preview */}
@@ -209,8 +215,8 @@ const SettingsPage = () => {
                   className="rounded-md p-3"
                   style={{ backgroundColor: `hsl(${colors.card})`, border: `1px solid hsl(${colors.border})` }}
                 >
-                  <p className="text-xs font-semibold" style={{ color: `hsl(${colors.cardForeground})` }}>Kart Örneği</p>
-                  <p className="text-[10px] mt-1" style={{ color: `hsl(${colors.mutedForeground})` }}>Kart içeriği buraya gelir</p>
+                  <p className="text-xs font-semibold" style={{ color: `hsl(${colors.cardForeground})` }}>{t('previewCard')}</p>
+                  <p className="text-[10px] mt-1" style={{ color: `hsl(${colors.mutedForeground})` }}>{t('previewCardDesc')}</p>
                 </div>
                 {/* Input preview */}
                 <div
@@ -221,22 +227,22 @@ const SettingsPage = () => {
                     color: `hsl(${colors.mutedForeground})`,
                   }}
                 >
-                  Giriş kutusu örneği...
+                  {t('previewInput')}
                 </div>
               </div>
             </div>
 
             {/* Color mapping legend */}
             <div className="mt-4 space-y-1.5">
-              <p className="text-[10px] font-display text-muted-foreground mb-2">RENK HARİTASI</p>
-              {PREVIEW_SECTIONS.map(({ key, area }) => (
+              <p className="text-[10px] font-display text-muted-foreground mb-2 uppercase">{t('colorMap')}</p>
+              {PREVIEW_SECTIONS.map(({ key }) => (
                 <div key={key} className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full border border-border flex-shrink-0"
                     style={{ backgroundColor: `hsl(${colors[key]})` }}
                   />
-                  <span className="text-[11px] text-foreground font-semibold">{labels[key]}:</span>
-                  <span className="text-[10px] text-muted-foreground">{area}</span>
+                  <span className="text-[11px] text-foreground font-semibold opacity-70">{key}:</span>
+                  <span className="text-[10px] text-muted-foreground">{t(`area${key.charAt(0).toUpperCase() + key.slice(1)}`)}</span>
                 </div>
               ))}
             </div>

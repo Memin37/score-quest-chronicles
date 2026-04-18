@@ -2,60 +2,60 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Gamepad2, Trophy, Clock, ChevronRight, Settings } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
-const games = [
+const gamesData = [
   {
     id: 'sudoku',
-    name: 'Sudoku',
-    description: 'Klasik sayı bulmacası. En hızlı süreyi yakala!',
+    nameKey: 'gameSudoku',
+    descKey: 'gameSudokuDesc',
     icon: '🧩',
     path: '/sudoku',
-    scoreType: 'En İyi Süre',
   },
   {
     id: 'memory',
-    name: 'Hafıza Kartları',
-    description: 'Eşleşen kartları bul, süreye karşı yarış!',
+    nameKey: 'gameMemory',
+    descKey: 'gameMemoryDesc',
     icon: '🃏',
     path: '/memory',
-    scoreType: 'En İyi Süre',
   },
   {
     id: 'blockpuzzle',
-    name: 'Blok Bulmaca',
-    description: 'Tetris parçalarını sürükleyip alanı tamamen doldur!',
+    nameKey: 'gameBlock',
+    descKey: 'gameBlockDesc',
     icon: '🧱',
     path: '/blockpuzzle',
-    scoreType: 'En İyi Süre',
   },
   {
     id: 'maze',
-    name: 'Labirent',
-    description: 'Ok tuşları veya WASD ile labirentten çık!',
+    nameKey: 'gameMaze',
+    descKey: 'gameMazeDesc',
     icon: '🏁',
     path: '/maze',
-    scoreType: 'En İyi Süre',
   },
 ];
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
-  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">{t('loading')}</p></div>;
   if (!user) return <Navigate to="/auth" replace />;
   const isAnon = user.isAnonymous;
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="font-display text-xl text-primary neon-text">ARENA</h1>
-          <div className="flex items-center gap-2">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <h1 className="font-display text-xl text-primary neon-text cursor-pointer" onClick={() => navigate('/')}>{t('arena')}</h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageSelector />
             <button
               onClick={() => navigate('/settings')}
-              className="p-2 text-muted-foreground hover:text-primary transition-colors"
-              title="Ayarlar"
+              className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors"
+              title={t('settings')}
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -63,8 +63,9 @@ const Index = () => {
               onClick={() => isAnon ? navigate('/auth') : navigate('/profile')}
               className="flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-md text-foreground text-sm hover:bg-muted/80 transition-all"
             >
-              <span>{user.name}</span>
-              {isAnon && <span className="text-xs text-muted-foreground">(Misafir)</span>}
+              <span className="hidden sm:inline">{user.name}</span>
+              <span className="sm:hidden">{user.name.slice(0, 3)}..</span>
+              {isAnon && <span className="text-xs text-muted-foreground">({t('guest')})</span>}
             </button>
           </div>
         </div>
@@ -74,13 +75,13 @@ const Index = () => {
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-3">
             <Gamepad2 className="w-8 h-8 text-primary" />
-            <h2 className="font-display text-sm sm:text-base text-foreground">OYUNLAR</h2>
+            <h2 className="font-display text-sm sm:text-base text-foreground">{t('games')}</h2>
           </div>
-          <p className="text-muted-foreground text-sm">Her hafta sıfırlanan skor tablosu ile yarış!</p>
+          <p className="text-muted-foreground text-sm">{t('indexSubtitle')}</p>
         </div>
 
         <div className="grid gap-4 max-w-lg mx-auto">
-          {games.map(game => (
+          {gamesData.map(game => (
             <button
               key={game.id}
               onClick={() => navigate(game.path)}
@@ -90,14 +91,14 @@ const Index = () => {
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">{game.icon}</span>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{game.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{game.description}</p>
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{t(game.nameKey)}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{t(game.descKey)}</p>
                     <div className="flex items-center gap-1 mt-2 text-xs text-accent">
                       <Trophy className="w-3 h-3" />
-                      <span>{game.scoreType}</span>
+                      <span>{t('bestTime')}</span>
                       <span className="text-muted-foreground mx-1">•</span>
                       <Clock className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">Haftalık</span>
+                      <span className="text-muted-foreground">{t('weekly')}</span>
                     </div>
                   </div>
                 </div>
@@ -108,7 +109,7 @@ const Index = () => {
         </div>
 
         <div className="text-center mt-12">
-          <p className="text-muted-foreground text-xs font-display">DAHA FAZLA OYUN YAKINDA...</p>
+          <p className="text-muted-foreground text-xs font-display">{t('moreGamesSoon')}</p>
         </div>
       </main>
     </div>

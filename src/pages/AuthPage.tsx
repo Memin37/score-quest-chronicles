@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getPendingScore } from '@/lib/pendingScore';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +14,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const { login, register, loginWithGoogle, loginAnonymously, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const getRedirectPath = () => {
     const pending = getPendingScore();
@@ -25,7 +28,7 @@ const AuthPage = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background grid-pattern flex items-center justify-center">
-        <p className="text-muted-foreground">Yükleniyor...</p>
+        <p className="text-muted-foreground">{t('loading')}</p>
       </div>
     );
   }
@@ -38,7 +41,7 @@ const AuthPage = () => {
     setLoading(true);
 
     if (!email || !password || (!isLogin && !name)) {
-      setError('Tüm alanları doldurun');
+      setError(t('fillAllFields'));
       setLoading(false);
       return;
     }
@@ -65,13 +68,14 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background grid-pattern flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background grid-pattern flex flex-col items-center justify-center p-4">
+      <div className="absolute top-4 right-4"><LanguageSelector /></div>
       <div className="w-full max-w-md">
         <h1 className="font-display text-2xl text-primary neon-text text-center mb-2">
-          ARENA
+          {t('arena')}
         </h1>
         <p className="text-muted-foreground text-center mb-8 text-sm">
-          Haftalık Oyun Platformu
+          {t('authSubtitle')}
         </p>
 
         <div className="bg-card border border-border rounded-lg p-6 neon-box">
@@ -86,7 +90,7 @@ const AuthPage = () => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Google ile Giriş Yap
+            {t('loginGoogle')}
           </button>
 
           <div className="flex items-center gap-3 mb-4">
@@ -104,7 +108,7 @@ const AuthPage = () => {
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               }`}
             >
-              Giriş Yap
+              {t('loginText')}
             </button>
             <button
               onClick={() => { setIsLogin(false); setError(''); }}
@@ -114,25 +118,25 @@ const AuthPage = () => {
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               }`}
             >
-              Kayıt Ol
+              {t('registerText')}
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Ad</label>
+                <label className="block text-sm text-muted-foreground mb-1">{t('nameField')}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="w-full bg-muted border border-border rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Adınız"
+                  placeholder={t('namePlaceholder')}
                 />
               </div>
             )}
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">E-posta</label>
+              <label className="block text-sm text-muted-foreground mb-1">{t('emailField')}</label>
               <input
                 type="email"
                 value={email}
@@ -142,7 +146,7 @@ const AuthPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">Şifre</label>
+              <label className="block text-sm text-muted-foreground mb-1">{t('passwordField')}</label>
               <input
                 type="password"
                 value={password}
@@ -161,7 +165,7 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full bg-primary text-primary-foreground py-2.5 rounded-md font-semibold hover:opacity-90 transition-opacity neon-box disabled:opacity-50"
             >
-              {loading ? '...' : isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+              {loading ? '...' : isLogin ? t('loginText') : t('registerText')}
             </button>
           </form>
 
@@ -175,7 +179,7 @@ const AuthPage = () => {
             onClick={() => { loginAnonymously(); navigate('/'); }}
             className="w-full mt-4 py-2.5 rounded-md font-semibold text-muted-foreground border border-border hover:bg-muted/80 transition-all text-sm"
           >
-            🎮 Misafir olarak devam et
+            🎮 {t('authGuestBtn')}
           </button>
         </div>
       </div>

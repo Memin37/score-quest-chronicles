@@ -7,6 +7,8 @@ import LeaderboardPanel from '@/components/LeaderboardPanel';
 import AdBanner from '@/components/AdBanner';
 import { Timer, RotateCcw, Trophy, User, LogOut, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 import { savePendingScore } from '@/lib/pendingScore';
 
 const difficultyLabels: Record<MemoryDifficulty, string> = {
@@ -19,6 +21,7 @@ const MemoryPage = () => {
   const { user, loading, logout } = useAuth();
   const { addEntry } = useGame();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [difficulty, setDifficulty] = useState<MemoryDifficulty>('easy');
   const [cards, setCards] = useState<MemoryCardType[]>([]);
@@ -114,15 +117,16 @@ const MemoryPage = () => {
 
   const gridConfig = getGridConfig(difficulty);
 
-  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (loading) return <div className="min-h-screen bg-background grid-pattern flex items-center justify-center"><p className="text-muted-foreground">{t('loading')}</p></div>;
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="font-display text-lg text-primary neon-text cursor-pointer" onClick={() => navigate('/')}>ARENA</h1>
+          <h1 className="font-display text-lg text-primary neon-text cursor-pointer" onClick={() => navigate('/')}>{t('arena')}</h1>
           <div className="flex items-center gap-3">
+            <LanguageSelector />
             <button onClick={() => setShowLeaderboard(!showLeaderboard)} className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border border-accent/30 rounded-md text-accent text-sm hover:bg-accent/20 transition-all sm:hidden">
               <Trophy className="w-4 h-4" />
             </button>
@@ -130,7 +134,7 @@ const MemoryPage = () => {
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">{user.name}</span>
             </button>
-            <button onClick={async () => { await logout(); navigate('/auth'); }} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors" title="Çıkış">
+            <button onClick={async () => { await logout(); navigate('/auth'); }} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors" title={t('logout')}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
@@ -157,7 +161,7 @@ const MemoryPage = () => {
                       : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                   }`}
                 >
-                  {difficultyLabels[d]}
+                  {t(d)}
                 </button>
               ))}
             </div>
@@ -168,23 +172,23 @@ const MemoryPage = () => {
                 <span className="font-mono text-lg text-foreground font-bold">{formatTime(timer)}</span>
               </div>
               <div className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md border border-border text-sm text-muted-foreground">
-                <span>Hamle: <span className="text-foreground font-bold">{moves}</span></span>
+                <span>{t('moves')}: <span className="text-foreground font-bold">{moves}</span></span>
               </div>
               <button
                 onClick={() => startNewGame(difficulty)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition-all text-sm"
               >
                 <RotateCcw className="w-4 h-4" />
-                Yeni Oyun
+                {t('newGame')}
               </button>
             </div>
 
             {isComplete && (
               <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg neon-box">
-                <p className="font-display text-xs text-primary neon-text">TEBRİKLER! 🎉</p>
+                <p className="font-display text-xs text-primary neon-text">{t('congrats')}</p>
                 <p className="text-foreground text-sm mt-1">
-                  Süreniz: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
-                  {' • '}Hamle: <span className="font-mono font-bold text-primary">{moves}</span>
+                  {t('time')}: <span className="font-mono font-bold text-primary">{formatTime(timer)}</span>
+                  {' • '}{t('moves')}: <span className="font-mono font-bold text-primary">{moves}</span>
                 </p>
                 {user?.isAnonymous && (
                   <button
@@ -194,7 +198,7 @@ const MemoryPage = () => {
                     }}
                     className="mt-2 text-xs text-accent underline hover:text-accent/80 transition-colors"
                   >
-                    Skorunuzu kaydetmek için giriş yapın →
+                    {t('saveScoreToLogin')}
                   </button>
                 )}
               </div>
@@ -223,7 +227,7 @@ const MemoryPage = () => {
                     className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
                   >
                     <Play className="w-5 h-5" />
-                    BAŞLA
+                    {t('start')}
                   </button>
                 </div>
               )}
@@ -240,8 +244,8 @@ const MemoryPage = () => {
             <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
               <div className="max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-display text-sm text-accent">SKOR TABLOSU</h2>
-                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
+                  <h2 className="font-display text-sm text-accent">{t('leaderboardTitle')}</h2>
+                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">{t('close')}</button>
                 </div>
                 <LeaderboardPanel game="memory" difficulty={difficulty} />
               </div>

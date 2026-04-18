@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatTime } from '@/lib/sudoku';
 import { Trophy, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LeaderboardPanelProps {
   game: string;
@@ -22,6 +23,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
   const { getLeaderboard, getAllTimeLeaderboard } = useGame();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>('weekly');
 
   const entries = tab === 'weekly'
@@ -33,7 +35,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
       <div className="flex items-center gap-2 mb-3">
         <Trophy className="w-5 h-5 text-accent" />
         <h3 className="font-display text-xs text-accent neon-text">
-          SKOR TABLOSU
+          {t('leaderboardTitle')}
         </h3>
       </div>
 
@@ -46,7 +48,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
             : 'text-muted-foreground hover:text-foreground'
             }`}
         >
-          Bu Hafta
+          {t('thisWeek')}
         </button>
         <button
           onClick={() => setTab('alltime')}
@@ -55,16 +57,16 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
             : 'text-muted-foreground hover:text-foreground'
             }`}
         >
-          Tüm Zamanlar
+          {t('allTime')}
         </button>
       </div>
 
       <p className="text-muted-foreground text-xs mb-3">
-        {difficultyLabels[difficulty]}
+        {t(difficulty)}
       </p>
 
       {entries.length === 0 ? (
-        <p className="text-muted-foreground text-sm italic">Henüz skor yok</p>
+        <p className="text-muted-foreground text-sm italic">{t('noScores')}</p>
       ) : (
         <div className="space-y-2">
           {entries.slice(0, 10).map((entry, i) => (
@@ -102,7 +104,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ game, difficulty })
           className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-md text-sm font-semibold bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-all"
         >
           <LogIn className="w-4 h-4" />
-          Skor kaydetmek için giriş yap
+          {t('loginToSaveScore')}
         </button>
       )}
     </div>

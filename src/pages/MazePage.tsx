@@ -5,6 +5,8 @@ import { generateMaze, canMove, getMazeSize, formatTime, difficultyLabels, getTe
 import LeaderboardPanel from '@/components/LeaderboardPanel';
 import { Timer, RotateCcw, Trophy, User, LogOut, AlertTriangle, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 import { savePendingScore } from '@/lib/pendingScore';
 
 const PENALTY_MS = 500;
@@ -19,6 +21,7 @@ const MazePage = () => {
   const { user, loading, logout } = useAuth();
   const { addEntry } = useGame();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [maze, setMaze] = useState<Cell[][] | null>(null);
@@ -161,7 +164,7 @@ const MazePage = () => {
   };
 
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">{t('loading')}</p></div>;
   if (!user) { navigate('/auth'); return null; }
 
   const finalTime = timer + mistakeCount * PENALTY_MS;
@@ -172,9 +175,10 @@ const MazePage = () => {
     <div className="min-h-screen bg-background grid-pattern">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => navigate('/')} className="font-display text-lg text-primary neon-text hover:opacity-80">ARENA</button>
-          <h2 className="font-display text-sm text-foreground">LABİRENT</h2>
+          <button onClick={() => navigate('/')} className="font-display text-lg text-primary neon-text hover:opacity-80">{t('arena')}</button>
+          <h2 className="font-display text-sm text-foreground uppercase">{t('gameMaze')}</h2>
           <div className="flex items-center gap-2">
+            <LanguageSelector />
             <button onClick={() => setShowLeaderboard(!showLeaderboard)} className="p-2 text-muted-foreground hover:text-primary"><Trophy className="w-5 h-5" /></button>
             <button onClick={() => navigate('/profile')} className="p-2 text-muted-foreground hover:text-primary"><User className="w-5 h-5" /></button>
             <button onClick={logout} className="p-2 text-muted-foreground hover:text-destructive"><LogOut className="w-5 h-5" /></button>
@@ -196,7 +200,7 @@ const MazePage = () => {
                     : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                     }`}
                 >
-                  {difficultyLabels[d]}
+                  {t(d)}
                 </button>
               ))}
             </div>
@@ -221,7 +225,7 @@ const MazePage = () => {
                 <div className="flex items-center gap-1.5 text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md border border-destructive/20">
                   <AlertTriangle className="w-4 h-4" />
                   <span className="font-mono font-bold">{mistakeCount}</span>
-                  <span className="text-destructive/80 text-xs hidden sm:inline">hata</span>
+                  <span className="text-destructive/80 text-xs hidden sm:inline">{t('mistakes')}</span>
                 </div>
               )}
               <button
@@ -229,7 +233,7 @@ const MazePage = () => {
                 className="flex items-center gap-1.5 px-3 py-2 bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition-all text-sm ml-auto sm:ml-0"
               >
                 <RotateCcw className="w-4 h-4" />
-                Yeni Oyun
+                {t('newGame')}
               </button>
             </div>
 
@@ -293,7 +297,7 @@ const MazePage = () => {
                         className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-display text-sm rounded-lg neon-box-strong hover:scale-105 transition-transform"
                       >
                         <Play className="w-5 h-5" />
-                        BAŞLA
+                        {t('start')}
                       </button>
                     </div>
                   )}
@@ -316,7 +320,7 @@ const MazePage = () => {
                         <ArrowRight className="w-6 h-6 text-foreground" />
                       </button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Parlayan noktalara tıklayarak ışınlan</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('teleportHint')}</p>
                   </div>
                 )}
 
@@ -324,31 +328,31 @@ const MazePage = () => {
                 {isComplete && (
                   <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-card border border-primary/50 rounded-xl p-8 max-w-sm w-full mx-4 text-center neon-box">
-                      <h3 className="font-display text-lg text-primary neon-text mb-2">TEBRİKLER!</h3>
-                      <p className="text-muted-foreground text-sm mb-4">Labirenti tamamladın!</p>
+                      <h3 className="font-display text-lg text-primary neon-text mb-2">{t('congrats')}</h3>
+                      <p className="text-muted-foreground text-sm mb-4">{t('mazeCompleted')}</p>
                       <div className="bg-muted rounded-lg p-4 mb-4">
-                        <p className="text-xs text-muted-foreground">Toplam Süre</p>
+                        <p className="text-xs text-muted-foreground">{t('totalTime')}</p>
                         <p className="text-2xl font-mono text-foreground">{formatTime(finalTime)}</p>
                         {mistakeCount > 0 && (
-                          <p className="text-xs text-destructive mt-1">({mistakeCount} ceza × {PENALTY_MS / 1000}s = +{mistakeCount * (PENALTY_MS / 1000)}s)</p>
+                          <p className="text-xs text-destructive mt-1">({mistakeCount} {t('penalty')} × {PENALTY_MS / 1000}s = +{mistakeCount * (PENALTY_MS / 1000)}s)</p>
                         )}
                       </div>
                       {user.isAnonymous ? (
                         <div className="space-y-2">
-                          <p className="text-xs text-muted-foreground">Skorunu kaydetmek için giriş yap!</p>
+                          <p className="text-xs text-muted-foreground">{t('guestWarning')}</p>
                           <button onClick={handleSaveScore} className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-sm hover:bg-primary/90">
-                            Giriş Yap & Kaydet
+                            {t('guestLoginToSave')}
                           </button>
                         </div>
                       ) : (
-                        <p className="text-xs text-accent">✓ Skorun kaydedildi!</p>
+                        <p className="text-xs text-accent">{t('scoreSaved')}</p>
                       )}
                       <div className="flex gap-2 mt-4">
                         <button onClick={() => startNewGame(difficulty)} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
-                          Tekrar Oyna
+                          {t('playAgain')}
                         </button>
                         <button onClick={() => { setGameStarted(false); setPreviewReady(false); setMaze(null); }} className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg text-sm hover:bg-muted/80">
-                          Zorluk Değiştir
+                          {t('changeDifficulty')}
                         </button>
                       </div>
                     </div>
@@ -368,8 +372,8 @@ const MazePage = () => {
             <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm lg:hidden p-4 overflow-auto">
               <div className="max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-display text-sm text-accent">SKOR TABLOSU</h2>
-                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
+                  <h2 className="font-display text-sm text-accent">{t('leaderboardTitle')}</h2>
+                  <button onClick={() => setShowLeaderboard(false)} className="text-muted-foreground hover:text-foreground text-2xl">{t('close')}</button>
                 </div>
                 <LeaderboardPanel game="maze" difficulty={difficulty} />
               </div>
